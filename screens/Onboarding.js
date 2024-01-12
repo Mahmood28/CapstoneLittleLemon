@@ -2,14 +2,13 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, Image, Text, Pressable, TextInput, ScrollView, KeyboardAvoidingView } from 'react-native';
 
-
 const validateEmail = (email) => {
   return email.match(
   /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
   );
 }
 
-const OnboardingScreen = () => {
+const OnboardingScreen = ({ navigation }) => {
   const [firstname, setFirstname] = useState('');
   const [email, setEmail] = useState('');
   const [validEmail, setValidEmail] = useState(false);
@@ -56,7 +55,7 @@ const OnboardingScreen = () => {
         <Text style={styles.regularText}>
           Let us get to know you
         </Text>
-        <Text style={{...styles.regularText, marginTop: 180}}>
+        <Text style={{...styles.regularText, marginTop: 100}}>
           First Name
         </Text>
         <TextInput
