@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { View, StyleSheet, Image, Text, Pressable, TextInput, ScrollView, KeyboardAvoidingView } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const validateEmail = (email) => {
   return email.match(
@@ -17,10 +18,6 @@ const OnboardingScreen = ({ navigation }) => {
   const onChangeEmail = (e) => {
     setEmail(e);
     setValidEmail(validateEmail(email));
-    // console.log("email: ", email);
-    // if (validEmail) {
-    //   console.log("email is valid!!!");
-    // }
   };
   
   const onChangeName = (e) => {
@@ -31,8 +28,26 @@ const OnboardingScreen = ({ navigation }) => {
     // console.log("Firstname: ",firstname);
   }
   
-  const dummy = () => {
+  const storeUserInfo = async () => {
     console.log("Next button pressed, firstname: *"+firstname+"* email: *"+email+"*");
+    let userDataStr = {
+      firstname: firstname,
+      lastname: null,
+      email: email,
+      avatarImage: null,
+      phone: null,
+      orderStatus: false,
+      passwordChanges: false,
+      specialOffers: false,
+      newsletter: false
+    };
+    try {
+      await AsyncStorage.setItem('userData', JSON.stringify(userDataStr));
+      console.log("wrote userData");
+    } catch (error) {
+      console.log(error);
+    }
+
     return;
   }
 
@@ -44,7 +59,7 @@ const OnboardingScreen = ({ navigation }) => {
       <View style = {styles.headercontainer}>
         <Image
           style={styles.headerimage}
-          source={require('../img/Logo1.png')}
+          source={require('../img/Logo.png')}
           resizeMode="contain"
           accessible={true}
           accessibilityLabel={'Little Lemon Logo Grey'}
@@ -80,7 +95,7 @@ const OnboardingScreen = ({ navigation }) => {
       <View style = {styles.footercontainer}>
         <View style={styles.buttonContainer}>
           <Pressable
-            onPress={() => dummy()}
+            onPress={() => storeUserInfo()}
             disabled={!validEmail||!validName}
             style={validEmail && validName? styles.buttonEnabled : styles.buttonDisabled}>
             <Text style={styles.buttonText}>Next</Text>
