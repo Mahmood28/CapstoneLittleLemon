@@ -72,31 +72,64 @@ const ProfileScreen = ({ navigation }) => {
     //     setFontLoaded(true);
     // }
 
+    
+
+    // const saveChanges = async () => {
+    // try {
+    //     await AsyncStorage.setItem('userData', JSON.stringify(userData));
+    //     console.log('User data saved successfully');
+    // } catch (error) {
+    //     console.log('Error saving user data', error);
+    // }
+    // };
+
+    const LogoTitle = () => {
+        return (
+            <Image
+                style={{ height: 70, resizeMode: 'contain' }}
+                source={require('../img/Logo.png')}
+            />
+        );
+    }
+
+    const AvatarTitle = () => {
+        return (
+            <Image
+                style={{ width: 50, height: 50, resizeMode: 'contain'}}
+                source={require('../img/Profile.png')}
+            />
+        );
+    }
+
+    const updateHeader = () => {
+        navigation.setOptions({
+            headerTitle: (props) => <LogoTitle {...props} />,
+            headerRight: (props) => <AvatarTitle {...props} />,
+            headerLeft: () => (
+                <Pressable
+                    onPress={() => {
+                        console.log("In ProfileScreen: updateHeader");
+                        //navigation.navigate('Home');
+                    }}
+                    disabled={false}
+                    style={{borderColor: '#495E57',backgroundColor: '#495E57',borderWidth: 0,borderRadius: 20,width: 40, padding: 0,margin: 0,height: 40}}
+                    >  
+                <Text style={{color: 'white',textAlign: 'center',fontSize: 22,fontWeight: 'bold'}}>&larr;</Text>
+                </Pressable>
+            )
+        }
+        )
+    }
+
     useEffect(() => {
         console.log("In ProfileScreen: useEffect");
         getUserDataWrapper();
         // loadFontWrapper();
+        updateHeader();
     }, []);
 
     return (
         <>
-        <View style = {styles.headercontainer}>
-            <Image
-            style={styles.headerimage}
-            source={require('../img/Logo.png')}
-            resizeMode="contain"
-            accessible={true}
-            accessibilityLabel={'Little Lemon Logo Grey'}
-            />
-            <Image
-                style={styles.avatarImageHeadline}
-                source={require('../img/Profile.png')}
-                resizeMode="center"
-                accessible={true}
-                accessibilityLabel={'Avatar'}
-            />
-                       
-        </View>
         <ScrollView style={styles.container}>
         
             <Text style={styles.regularText}>
@@ -112,7 +145,7 @@ const ProfileScreen = ({ navigation }) => {
                     accessibilityLabel={'Avatar'}
                 />
                 <Pressable
-                    onPress={() => {console.log("Change")}}
+                    onPress={() => {console.log("Change"); updateHeader()}}
                     disabled={false}
                     style={ styles.buttonEnabledGreenRound }>
                     <Text style={styles.buttonTextWhite}>Change</Text>
