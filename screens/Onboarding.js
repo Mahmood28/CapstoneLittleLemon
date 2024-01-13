@@ -34,7 +34,8 @@ const OnboardingScreen = ({ navigation }) => {
       firstname: firstname,
       lastname: null,
       email: email,
-      avatarImage: null,
+      avatarImg: null,
+      avatarImage2: null,
       phone: null,
       orderStatus: false,
       passwordChanges: false,
@@ -44,6 +45,7 @@ const OnboardingScreen = ({ navigation }) => {
     try {
       await AsyncStorage.setItem('userData', JSON.stringify(userDataStr));
       console.log("wrote userData");
+      navigation.navigate('Profile');
     } catch (error) {
       console.log(error);
     }

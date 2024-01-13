@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {View, Image, Pressable, Text, StyleSheet, TextInput, ScrollView, Dimensions} from 'react-native';
 import { MaskedTextInput } from "react-native-mask-text";
 import { CheckBox, Separator } from "react-native-btr";
+import * as ImagePicker from 'expo-image-picker';
 //import * as Font from 'expo-font';
 
 const validateEmail = (email) => {
@@ -20,6 +21,7 @@ const ProfileScreen = ({ navigation }) => {
     const [validEmail, setValidEmail] = useState(false);
     const [validFirstName, setValidFirstName] = useState(false);
     const [validLastName, setValidLastName] = useState(false);
+    const [dummy, setDummy] = useState();
 
     const onChangeFirstName = (e) => {
         if (userData.firstname.length > 0 || e != ' ') {  // skip leading spaces
@@ -29,10 +31,10 @@ const ProfileScreen = ({ navigation }) => {
       }
     
       const onChangeLastName = (e) => {
-        if (userData.lastname.length > 0 || e != ' ') {  // skip leading spaces
+        if ((userData.lastname != null && userData.lastname.length > 0) || e != ' ') {  // skip leading spaces
           setUserData({...userData, lastname: e});
         }
-        setValidLastName(userData.lastname.length > 0);
+        setValidLastName(userData.lastname != null && userData.lastname.length > 0);
       }
     
       const onChangeEmail = (e) => {
@@ -121,6 +123,83 @@ const ProfileScreen = ({ navigation }) => {
         )
     }
 
+    clearAllAsyncStorage = async () => {
+        try {
+          await AsyncStorage.clear()
+        } catch(e) {
+          // clear error
+        }
+        console.log('Clear Done.')
+      }
+
+    const pickImage = async () => {
+        // No permissions request is necessary for launching the image library
+        console.log("In ProfileScreen: pickImage");
+        try {
+            let result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.All,
+                allowsEditing: false,
+                aspect: [4, 3],
+                quality: 1,
+            });
+            console.log('Result imagePicker: ',result);
+            if (!result.canceled) {
+                console.log('Result imagePicker not canceled, userData: ', userData);
+                return (result.assets[0].uri);
+            } else {
+                return null;
+            }
+        } catch (error) {
+            console.log(error);
+            return null;
+        }
+    };
+
+    const updateAvatar = async () => {
+        console.log("In ProfileScreen: updateAvatar, before pickImage(), userData.avatarImage: ",userData.avatarImage);
+        let uri = await pickImage();
+        console.log("In ProfileScreen: updateAvatar after pickImage: uri: ",uri);
+        if (uri != null) {
+            setUserData({...userData, avatarImage: uri});
+        }
+        console.log("In ProfileScreen: updateAvatar, AFTER pickImage(), userData.avatarImage: ",userData.avatarImage);
+    }
+
+    const Avatar = () => {
+        if (userData.avatarImage != null) {
+            return (
+                <Pressable
+                    onPress={() => {
+                        console.log("In Avatar onPress");
+                        updateAvatar();
+                        console.log("In Avatar onPress after updateAvatar");
+                    }}>
+                    <Image
+                        style={styles.avatarImage}
+                        source={userData.avatarImage}
+                        resizeMode="contain"
+                        accessible={true}
+                        accessibilityLabel={'Avatar'}
+                    />
+                </Pressable>
+            );
+        } else {
+            return (
+                <Pressable
+                    onPress={() => {
+                        console.log("In Avatar onPress");
+                        updateAvatar();
+                        console.log("In Avatar onPress after updateAvatar");
+                    }}>
+                    <View style={{ ...styles.avatarImage, borderRadius: 40, backgroundColor: '#495E57', alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ fontSize: 40, fontWeight: 'bold', color: 'white' }}>GS</Text>
+                    </View>
+                </Pressable>
+            );
+
+        }  
+    }
+
     useEffect(() => {
         console.log("In ProfileScreen: useEffect");
         getUserDataWrapper();
@@ -137,13 +216,7 @@ const ProfileScreen = ({ navigation }) => {
             </Text>
 
             <View style={styles.innerContainer1}>
-                <Image
-                    style={styles.avatarImage}
-                    source={require('../img/Profile.png')}
-                    resizeMode="contain"
-                    accessible={true}
-                    accessibilityLabel={'Avatar'}
-                />
+                <Avatar />
                 <Pressable
                     onPress={() => {console.log("Change"); updateHeader()}}
                     disabled={false}
@@ -256,7 +329,7 @@ const ProfileScreen = ({ navigation }) => {
             </View>
 
             <Pressable
-                onPress={() => {console.log("Logout")}}
+                onPress={() => {console.log("Logout"); clearAllAsyncStorage(); navigation.navigate('Onboarding')}}
                 disabled={false}
                 style={ styles.buttonEnabledLogout }>
                 <Text style={styles.buttonTextBlack}>Log out</Text>
@@ -313,6 +386,9 @@ const styles = StyleSheet.create({
     avatarImage: {
         width: 80,
         height: 80,
+        borderRadius: 40,
+        borderColor: 'lightgrey',
+        borderWidth: 1,
     },
     regularText: {
         fontSize: 20,
