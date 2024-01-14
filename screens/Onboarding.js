@@ -30,12 +30,11 @@ const OnboardingScreen = ({ navigation }) => {
   
   const storeUserInfo = async () => {
     console.log("Next button pressed, firstname: *"+firstname+"* email: *"+email+"*");
-    let userDataStr = {
+    let userData = {
       firstname: firstname,
       lastname: null,
       email: email,
-      avatarImg: null,
-      avatarImage2: null,
+      avatarImage: null,
       phone: null,
       orderStatus: false,
       passwordChanges: false,
@@ -43,17 +42,16 @@ const OnboardingScreen = ({ navigation }) => {
       newsletter: false
     };
     try {
-      await AsyncStorage.setItem('userData', JSON.stringify(userDataStr));
+      await AsyncStorage.setItem('userData', JSON.stringify(userData));
       console.log("wrote userData");
       navigation.navigate('Profile');
     } catch (error) {
       console.log(error);
+      Alert.alert('Data not stored', 'Your input data could not be stored. Please try again');
     }
 
     return;
   }
-
-//  <ScrollView automaticallyAdjustKeyboardInsets={true} style={styles.container}>
 
   return (
     <KeyboardAvoidingView behavior="padding" style={styles.container}>
@@ -79,7 +77,7 @@ const OnboardingScreen = ({ navigation }) => {
           style={styles.inputBox}
           value={firstname}
           onChangeText={onChangeName}
-          placeholder={'Type your first name'}
+          placeholder={'Enter your first name'}
           keyboardType={'default'}
         />
         <Text style={styles.regularText}>
@@ -89,7 +87,7 @@ const OnboardingScreen = ({ navigation }) => {
           style={styles.inputBox}
           value={email}
           onChangeText={onChangeEmail}
-          placeholder={'Type your email'}
+          placeholder={'Enter your email'}
           keyboardType={'email-address'}
         />
       </View>

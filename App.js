@@ -13,7 +13,7 @@ export default function App() {
     isLoading: true,
     isOnboardingComplete: false
   });
-  const [userData, setUserData] = useState({});
+//  const [userData, setUserData] = useState({});
   
   const loadState = async () => {
     try {
@@ -25,7 +25,7 @@ export default function App() {
           isLoading: false,
           isOnboardingComplete: true
         });
-        setUserData(JSON.parse(userDataStr));
+//        setUserData(JSON.parse(userDataStr));
       } else {
         console.log("No userData found in AsyncStorage");
         setState({

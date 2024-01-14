@@ -1,33 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {View, Image, Pressable, Text, StyleSheet, TextInput, ScrollView, Dimensions} from 'react-native';
+import {View, Image, Pressable, Text, StyleSheet, TextInput, ScrollView, Alert} from 'react-native';
 import { MaskedTextInput } from "react-native-mask-text";
 import { CheckBox, Separator } from "react-native-btr";
 import * as ImagePicker from 'expo-image-picker';
 //import * as Font from 'expo-font';
 
 const validateEmail = (email) => {
+    if (email == null || email.length === 0) {return false};
     return email.match(
     /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
     );
   }
 
-  const windowWidth = Dimensions.get("window").width;
-  const windowHeight = Dimensions.get("window").height;
-  const headerHeight = windowHeight * 0.1;
 
 const ProfileScreen = ({ navigation }) => {
     const [userData, setUserData] = useState({});
     const [validEmail, setValidEmail] = useState(false);
     const [validFirstName, setValidFirstName] = useState(false);
     const [validLastName, setValidLastName] = useState(false);
-    const [dummy, setDummy] = useState();
+    const [validPhone, setValidPhone] = useState(false);
 
     const onChangeFirstName = (e) => {
-        if (userData.firstname.length > 0 || e != ' ') {  // skip leading spaces
+        if ((userData.firstname != null && userData.firstname.length > 0) || e != ' ') {  // skip leading spaces
           setUserData({...userData, firstname: e});
         }
-        setValidFirstName(userData.firstname.length > 0);
+        setValidFirstName(userData.firstname != null && userData.firstname.length > 0);
       }
     
       const onChangeLastName = (e) => {
@@ -44,13 +42,13 @@ const ProfileScreen = ({ navigation }) => {
     
       const onChangePhone = (e) => {
         setUserData({...userData, phone: e});
+        setValidPhone(userData.phone != null && userData.phone.length >= 17);
+        console.log('in onChangePhone: length of phone number: ', userData.phone != null? userData.phone.length : 0);
       };
     
-
     const getUserData = async () => {
         try {
             const userDataStr = await AsyncStorage.getItem('userData');
-            console.log("In ProfileScreen: gelesener userDataStr", userDataStr);
             const data = userDataStr != null ? JSON.parse(userDataStr) : null;
             setUserData(data);
         } catch (error) {
@@ -60,7 +58,33 @@ const ProfileScreen = ({ navigation }) => {
     }
 
     const getUserDataWrapper = async () => {
+        console.log('in getUserDataWrapper');
         await getUserData();
+        updateHeader();
+    }
+
+    const saveChanges = () => {
+        try {
+            AsyncStorage.setItem('userData', JSON.stringify(userData));
+            // show success message
+            Alert.alert('Changes saved', 'Your profile has been updated successfully');
+            // TODO: navigate to next screen
+        } catch (error) {
+            Alert.alert('Changes could not be saved', 'Your profile has not been updated. Please try again');
+            console.log(error);
+        }
+    }
+
+    const emptyAllFields = () => {
+        setUserData({firstname: null,
+            lastname: null,
+            email: null,
+            avatarImage: null,
+            phone: null,
+            orderStatus: false,
+            passwordChanges: false,
+            specialOffers: false,
+            newsletter: false});
     }
 
     // const loadFont = async () => {
@@ -123,7 +147,7 @@ const ProfileScreen = ({ navigation }) => {
         )
     }
 
-    clearAllAsyncStorage = async () => {
+    const clearAllAsyncStorage = async () => {
         try {
           await AsyncStorage.clear()
         } catch(e) {
@@ -170,13 +194,11 @@ const ProfileScreen = ({ navigation }) => {
             return (
                 <Pressable
                     onPress={() => {
-                        console.log("In Avatar onPress");
                         updateAvatar();
-                        console.log("In Avatar onPress after updateAvatar");
                     }}>
                     <Image
                         style={styles.avatarImage}
-                        source={userData.avatarImage}
+                        source={{uri: userData.avatarImage}}
                         resizeMode="contain"
                         accessible={true}
                         accessibilityLabel={'Avatar'}
@@ -184,15 +206,16 @@ const ProfileScreen = ({ navigation }) => {
                 </Pressable>
             );
         } else {
+            let initials = {first: '.', second: '.'};
+            if (userData.firstname!= null && userData.firstname.length > 0) {initials.first = userData.firstname[0];}
+            if (userData.lastname!= null && userData.lastname.length > 0) {initials.second = userData.lastname[0];}
             return (
                 <Pressable
                     onPress={() => {
-                        console.log("In Avatar onPress");
                         updateAvatar();
-                        console.log("In Avatar onPress after updateAvatar");
                     }}>
                     <View style={{ ...styles.avatarImage, borderRadius: 40, backgroundColor: '#495E57', alignItems: 'center', justifyContent: 'center' }}>
-                        <Text style={{ fontSize: 40, fontWeight: 'bold', color: 'white' }}>GS</Text>
+                        <Text style={{ fontSize: 40, fontWeight: 'bold', color: 'white' }}>{initials.first}{initials.second}</Text>
                     </View>
                 </Pressable>
             );
@@ -201,11 +224,20 @@ const ProfileScreen = ({ navigation }) => {
     }
 
     useEffect(() => {
-        console.log("In ProfileScreen: useEffect");
+        console.log("In ProfileScreen: useEffect []");
         getUserDataWrapper();
         // loadFontWrapper();
-        updateHeader();
     }, []);
+
+    useEffect(() => {
+        console.log("In ProfileScreen: useEffect [userData]", userData);
+        if (userData != null) {
+            setValidFirstName(userData.firstname != null && userData.firstname.length > 0);
+            setValidLastName(userData.lastname != null && userData.lastname.length > 0);
+            setValidEmail(userData.email != null && validateEmail(userData.email));
+            setValidPhone(userData.phone != null && userData.phone.length >= 17);
+        }
+    }, [userData])
 
     return (
         <>
@@ -218,13 +250,15 @@ const ProfileScreen = ({ navigation }) => {
             <View style={styles.innerContainer1}>
                 <Avatar />
                 <Pressable
-                    onPress={() => {console.log("Change"); updateHeader()}}
-                    disabled={false}
-                    style={ styles.buttonEnabledGreenRound }>
+                    onPress={() => {console.log("Change"); 
+                        updateAvatar();
+                    }}
+                    disabled={!(validFirstName && validLastName && validEmail && validPhone)}
+                    style={validFirstName && validLastName && validEmail && validPhone? styles.buttonEnabledGreenRound : styles.buttonDisabledGreenRound}>
                     <Text style={styles.buttonTextWhite}>Change</Text>
                 </Pressable>
                 <Pressable
-                    onPress={() => console.log("Remove")}
+                    onPress={() => {console.log("Remove"); setUserData({...userData, avatarImage: null});}}
                     disabled={false}
                     style={ styles.buttonEnabledWhite }>
                     <Text style={styles.buttonTextGreen}>Remove</Text>
@@ -238,7 +272,7 @@ const ProfileScreen = ({ navigation }) => {
                 style={styles.inputBox}
                 value={userData.firstname}
                 onChangeText={onChangeFirstName}
-                placeholder={userData.firstname}
+                placeholder={(userData.firstname != null && userData.firstname.length > 0) ? userData.firstname: 'Enter your first name'}
                 keyboardType="default"
             />
 
@@ -260,7 +294,7 @@ const ProfileScreen = ({ navigation }) => {
                 style={styles.inputBox}
                 value={userData.email}
                 onChangeText={onChangeEmail}
-                placeholder={userData.email}
+                placeholder={(userData.email != null) ? userData.email : 'Enter your email'}
                 keyboardType={'email-address'}
             />
 
@@ -337,15 +371,17 @@ const ProfileScreen = ({ navigation }) => {
 
             <View style={styles.innerContainer2}>
                 <Pressable
-                    onPress={() => console.log("Discard changes")}
+                    onPress={() => {console.log("Discard changes"); getUserDataWrapper();}}
                     disabled={false}
                     style={ styles.buttonEnabledWhiteRoundBig }>
                     <Text style={styles.buttonTextGreen}>Discard changes</Text>
                 </Pressable>
                 <Pressable
-                    onPress={() => {console.log("Save changes")}}
-                    disabled={false}
-                    style={ styles.buttonEnabledGreenRoundBig }>
+                    onPress={() => {console.log("Save changes"); 
+                        saveChanges();
+                    }}
+                    disabled={!(validFirstName && validLastName && validEmail && validPhone)}
+                    style={validFirstName && validLastName && validEmail && validPhone ? styles.buttonEnabledGreenRoundBig : styles.buttonDisabledGreenRoundBig}>
                     <Text style={styles.buttonTextWhite}>Save changes</Text>
                 </Pressable>
             </View>
@@ -414,10 +450,26 @@ const styles = StyleSheet.create({
         borderRadius: 6,
         width: 80,
       },
+      buttonDisabledGreenRound: {
+        padding: 6,
+        borderColor: 'lightgrey',
+        backgroundColor: 'lightgrey',
+        borderWidth: 2,
+        borderRadius: 6,
+        width: 80,
+      },
       buttonEnabledGreenRoundBig: {
         padding: 6,
         borderColor: '#495E57',
         backgroundColor: '#495E57',
+        borderWidth: 2,
+        borderRadius: 6,
+        width: 140,
+      },
+      buttonDisabledGreenRoundBig: {
+        padding: 6,
+        borderColor: 'lightgrey',
+        backgroundColor: 'lightgrey',
         borderWidth: 2,
         borderRadius: 6,
         width: 140,
