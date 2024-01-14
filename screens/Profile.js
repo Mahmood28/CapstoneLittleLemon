@@ -75,18 +75,6 @@ const ProfileScreen = ({ navigation }) => {
         }
     }
 
-    const emptyAllFields = () => {
-        setUserData({firstname: null,
-            lastname: null,
-            email: null,
-            avatarImage: null,
-            phone: null,
-            orderStatus: false,
-            passwordChanges: false,
-            specialOffers: false,
-            newsletter: false});
-    }
-
     // const loadFont = async () => {
     //     await Font.loadAsync({
     //       'MarkaziText': require('../assets/fonts/MarkaziText-Regular.ttf'),
@@ -149,8 +137,12 @@ const ProfileScreen = ({ navigation }) => {
 
     const clearAllAsyncStorage = async () => {
         try {
-          await AsyncStorage.clear()
+            await AsyncStorage.clear();
+            // TODO: navigate to onboarding screen
+            navigation.goBack(null);
         } catch(e) {
+            console.log('In clearAllAsyncStorage: error :', e);
+            Alert.alert('Logout failed', 'Your profile has not been deleted. Please try again');
           // clear error
         }
         console.log('Clear Done.')
@@ -253,8 +245,8 @@ const ProfileScreen = ({ navigation }) => {
                     onPress={() => {console.log("Change"); 
                         updateAvatar();
                     }}
-                    disabled={!(validFirstName && validLastName && validEmail && validPhone)}
-                    style={validFirstName && validLastName && validEmail && validPhone? styles.buttonEnabledGreenRound : styles.buttonDisabledGreenRound}>
+                    disabled={false}
+                    style={styles.buttonEnabledGreenRound}>
                     <Text style={styles.buttonTextWhite}>Change</Text>
                 </Pressable>
                 <Pressable
@@ -363,7 +355,7 @@ const ProfileScreen = ({ navigation }) => {
             </View>
 
             <Pressable
-                onPress={() => {console.log("Logout"); clearAllAsyncStorage(); navigation.navigate('Onboarding')}}
+                onPress={() => {console.log("Logout"); clearAllAsyncStorage();}}
                 disabled={false}
                 style={ styles.buttonEnabledLogout }>
                 <Text style={styles.buttonTextBlack}>Log out</Text>
@@ -446,14 +438,6 @@ const styles = StyleSheet.create({
         padding: 6,
         borderColor: '#495E57',
         backgroundColor: '#495E57',
-        borderWidth: 2,
-        borderRadius: 6,
-        width: 80,
-      },
-      buttonDisabledGreenRound: {
-        padding: 6,
-        borderColor: 'lightgrey',
-        backgroundColor: 'lightgrey',
         borderWidth: 2,
         borderRadius: 6,
         width: 80,

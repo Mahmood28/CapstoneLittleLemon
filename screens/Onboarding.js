@@ -44,7 +44,8 @@ const OnboardingScreen = ({ navigation }) => {
     try {
       await AsyncStorage.setItem('userData', JSON.stringify(userData));
       console.log("wrote userData");
-      navigation.navigate('Profile');
+      navigation.goBack(null);
+      //TODO: navigation
     } catch (error) {
       console.log(error);
       Alert.alert('Data not stored', 'Your input data could not be stored. Please try again');
@@ -52,7 +53,7 @@ const OnboardingScreen = ({ navigation }) => {
 
     return;
   }
-
+// TODO: change to Scrollview similar to ProfileScreen
   return (
     <KeyboardAvoidingView behavior="padding" style={styles.container}>
     
