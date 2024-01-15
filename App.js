@@ -6,11 +6,13 @@ import OnboardingScreen from "./screens/Onboarding";
 import ProfileScreen from "./screens/Profile";
 import SplashScreen from './screens/Splash';
 import {GlobalStateContext, GlobalStateProvider} from "./GlobalStateProvider";
+import {Text, View} from 'react-native';
+import {MyNavigation} from "./MyNavigation";
 
-const Stack = createNativeStackNavigator();
+
 
 export default function App() {
-  const [state, setState] = React.useContext(GlobalStateContext);
+  //const [state, setState] = React.useContext(GlobalStateContext);
   //const state ={};
 
   // const loadState = async () => {
@@ -49,18 +51,11 @@ export default function App() {
   // }
 
   return (
-    <NavigationContainer>
-      <GlobalStateProvider>
-        <Stack.Navigator>
-          {state.isOnboardingComplete ? (
-            <Stack.Screen name="Profile" component={ProfileScreen} 
-            options={{headerBackVisible: true}}/>
-          ) : (
-            <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-          )}
-          </Stack.Navigator>
-        </GlobalStateProvider>
-    </NavigationContainer>
-
+  <View>
+  <GlobalStateProvider>
+    <Text>Hello</Text>
+    <MyNavigation />
+  </GlobalStateProvider>
+  </View>
   );
 }
