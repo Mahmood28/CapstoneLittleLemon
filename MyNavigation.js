@@ -1,11 +1,11 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {GlobalStateContext, } from "./GlobalStateProvider";
 import OnboardingScreen from "./screens/Onboarding";
 import ProfileScreen from "./screens/Profile";
 import SplashScreen from './screens/Splash';
-import {GlobalStateContext, GlobalStateProvider} from "./GlobalStateProvider";
-import {View, Text} from 'react-native';
 
 const Stack = createNativeStackNavigator();
 

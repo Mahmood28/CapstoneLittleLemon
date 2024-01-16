@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import {
   View,
   StyleSheet,
@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { GlobalStateContext } from "../GlobalStateProvider";
 
 const validateEmail = (email) => {
   return email.match(
@@ -18,6 +19,13 @@ const validateEmail = (email) => {
 };
 
 const OnboardingScreen = ({ navigation }) => {
+  const [
+    state,
+    setIsLoadingTrue,
+    setIsLoadingFalse,
+    setIsOnboardingCompleteTrue,
+    setIsOnboardingCompleteFalse,
+  ] = React.useContext(GlobalStateContext);
   const [firstname, setFirstname] = useState("");
   const [email, setEmail] = useState("");
   const [validEmail, setValidEmail] = useState(false);
@@ -59,8 +67,7 @@ const OnboardingScreen = ({ navigation }) => {
     try {
       await AsyncStorage.setItem("userData", JSON.stringify(userData));
       console.log("wrote userData");
-      navigation.goBack(null);
-      //TODO: navigation
+      setIsOnboardingCompleteTrue();
     } catch (error) {
       console.log(error);
       Alert.alert(

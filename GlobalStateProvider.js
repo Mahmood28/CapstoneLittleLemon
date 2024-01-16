@@ -4,7 +4,7 @@ export const GlobalStateContext = createContext();
 
 export const GlobalStateProvider = ({ children }) => {
   const [state, setState] = useState({
-    isLoading: true,
+    isLoading: false,
     isOnboardingComplete: false
   });
 

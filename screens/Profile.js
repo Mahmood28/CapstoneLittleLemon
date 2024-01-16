@@ -4,6 +4,7 @@ import {View, Image, Pressable, Text, StyleSheet, TextInput, ScrollView, Alert} 
 import { MaskedTextInput } from "react-native-mask-text";
 import { CheckBox, Separator } from "react-native-btr";
 import * as ImagePicker from 'expo-image-picker';
+import {GlobalStateContext, } from "../GlobalStateProvider";
 //import * as Font from 'expo-font';
 
 const validateEmail = (email) => {
@@ -15,6 +16,7 @@ const validateEmail = (email) => {
 
 
 const ProfileScreen = ({ navigation }) => {
+    const [state, setIsLoadingTrue, setIsLoadingFalse, setIsOnboardingCompleteTrue, setIsOnboardingCompleteFalse] = React.useContext(GlobalStateContext);
     const [userData, setUserData] = useState({});
     const [validEmail, setValidEmail] = useState(false);
     const [validFirstName, setValidFirstName] = useState(false);
@@ -52,7 +54,7 @@ const ProfileScreen = ({ navigation }) => {
             const data = userDataStr != null ? JSON.parse(userDataStr) : null;
             setUserData(data);
         } catch (error) {
-            // TODO: Handle error of not stored userData - return to OnboardingScreen
+            setIsOnboardingCompleteFalse();   // Handle error of not stored userData - return to OnboardingScreen
             console.log(error);
         }
     }
@@ -122,7 +124,7 @@ const ProfileScreen = ({ navigation }) => {
             headerLeft: () => (
                 <Pressable
                     onPress={() => {
-                        console.log("In ProfileScreen: updateHeader");
+                        console.log("In ProfileScreen: left arrow pressed");
                         //navigation.navigate('Home');
                     }}
                     disabled={false}
@@ -138,8 +140,7 @@ const ProfileScreen = ({ navigation }) => {
     const clearAllAsyncStorage = async () => {
         try {
             await AsyncStorage.clear();
-            // TODO: navigate to onboarding screen
-            navigation.goBack(null);
+            setIsOnboardingCompleteFalse();  // back to onboarding screen
         } catch(e) {
             console.log('In clearAllAsyncStorage: error :', e);
             Alert.alert('Logout failed', 'Your profile has not been deleted. Please try again');
