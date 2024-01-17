@@ -6,6 +6,7 @@ import {GlobalStateContext, } from "./GlobalStateProvider";
 import OnboardingScreen from "./screens/Onboarding";
 import ProfileScreen from "./screens/Profile";
 import SplashScreen from './screens/Splash';
+import HomeScreen from './screens/Home';
 
 const Stack = createNativeStackNavigator();
 
@@ -52,8 +53,10 @@ export const MyNavigation = () => {
 
     <Stack.Navigator>
       {state.isOnboardingComplete ? (
-        <Stack.Screen name="Profile" component={ProfileScreen} 
-        options={{headerBackVisible: true}}/>
+        <>
+        <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Profile" component={ProfileScreen} />
+        </>
       ) : (
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
       )}
