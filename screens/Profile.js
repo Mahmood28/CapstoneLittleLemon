@@ -14,6 +14,7 @@ import { MaskedTextInput } from "react-native-mask-text";
 import { CheckBox, Separator } from "react-native-btr";
 import * as ImagePicker from "expo-image-picker";
 import { GlobalStateContext } from "../GlobalStateProvider";
+import { clearAllMenuSQLDB } from "../MenuDatabase";
 //import * as Font from 'expo-font';
 
 const validateEmail = (email) => {
@@ -471,9 +472,10 @@ const ProfileScreen = ({ navigation }) => {
         </View>
 
         <Pressable
-          onPress={() => {
+          onPress={async () => {
             console.log("Logout");
             clearAllAsyncStorage();
+            await clearAllMenuSQLDB();
           }}
           disabled={false}
           style={styles.buttonEnabledLogout}
