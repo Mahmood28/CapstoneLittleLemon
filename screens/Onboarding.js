@@ -80,7 +80,7 @@ const OnboardingScreen = ({ navigation }) => {
   };
   // TODO: change to Scrollview similar to ProfileScreen
   return (
-    <KeyboardAvoidingView behavior="padding" style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={styles.headercontainer}>
         <Image
           style={styles.headerimage}
@@ -93,7 +93,7 @@ const OnboardingScreen = ({ navigation }) => {
 
       <View style={styles.textInputContainer}>
         <Text style={styles.regularText}>Let us get to know you</Text>
-        <Text style={{ ...styles.regularText, marginTop: 100 }}>
+        <Text style={{ ...styles.regularText, marginTop: 40 }}>
           First Name
         </Text>
         <TextInput
@@ -128,7 +128,7 @@ const OnboardingScreen = ({ navigation }) => {
           </Pressable>
         </View>
       </View>
-    </KeyboardAvoidingView>
+    </ScrollView>
   );
 };
 
@@ -137,23 +137,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headercontainer: {
-    flex: 1,
     backgroundColor: "lightgrey",
     alignItems: "center",
   },
   textInputContainer: {
-    flex: 4,
     backgroundColor: "grey",
     alignItems: "center",
+    paddingVertical : 40,
   },
   footercontainer: {
-    flex: 1,
     backgroundColor: "lightgrey",
   },
   headerimage: {
-    width: "75%",
-    height: "80%",
-    marginVertical: 30,
+    width: 350,
+    marginVertical: 20,
   },
   regularText: {
     fontSize: 24,
@@ -176,8 +173,9 @@ const styles = StyleSheet.create({
     width: 280,
   },
   buttonContainer: {
-    marginTop: "10%",
+    marginTop: 20,
     marginLeft: "70%",
+    marginBottom: 20
   },
   buttonDisabled: {
     padding: 6,
