@@ -16,6 +16,9 @@ export const createMenuTableInDBIfNotExisting = async () => {
     }
 };
 
+// TODO: not nice that "readAllMenuFromDB" is to be implemented in the Home-Screen => try to find a better solution
+
+
 
 // export const readAllMenuFromDB = async () => {
 //     console.log('In readAllMenuFromDB');
