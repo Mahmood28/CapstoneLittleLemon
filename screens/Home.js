@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback} from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   View,
@@ -9,6 +9,8 @@ import {
   TextInput,
   FlatList,
 } from "react-native";
+import { SearchBar } from "react-native-elements";
+import debounce from 'lodash.debounce';
 import { GlobalStateContext } from "../GlobalStateProvider";
 import { createMenuTableInDBIfNotExisting, readAllMenuFromDB, writeMenuItemToDB, filterByQueryAndCategories} from "../MenuDatabase";
 
@@ -26,8 +28,8 @@ const HomeScreen = ({ navigation }) => {
   const [userData, setUserData] = useState({});
   const [menu, setMenu] = useState([]);
   const [query, setQuery] = useState('');
-  const [filterSelections, setFilterSelections] = useState(categories.map(() => false)
-  );
+  const [filterSelections, setFilterSelections] = useState(categories.map(() => false));
+  const [searchBarText, setSearchBarText] = useState('');
 
   const getUserData = async () => {
     try {
@@ -263,7 +265,16 @@ const HomeScreen = ({ navigation }) => {
     );
   };
 
+  const lookup = useCallback((q) => {
+    setQuery(q);
+  }, []);
 
+  const debouncedLookup = useMemo(() => debounce(lookup, 500), [lookup]);
+
+  const handleSearchChange = (text) => {
+    setSearchBarText(text);
+    debouncedLookup(text);
+  };
 
   useEffect(() => {
     console.log("In HomeScreen: useEffect []");
@@ -329,28 +340,16 @@ const HomeScreen = ({ navigation }) => {
             />
           </View>
         </View>
-        <View
-          style={{
-            width: 50,
-            height: 50,
-            backgroundColor: "#EDEFEE",
-            borderRadius: 25,
-            margin: 10,
-            padding: 15,
-          }}
-        >
-          <Pressable
-            onPress={() => {
-              console.log("In HomeScreen: Search Lens pressed");
-              // TODO:
-            }}
-          >
-            <Image
-              style={{ width: 20, height: 20, resizeMode: "contain" }}
-              source={require("../img/searchLens.png")}
-            />
-          </Pressable>
-        </View>
+        <SearchBar
+        placeholder="Search"
+        placeholderTextColor='#495E57'
+        onChangeText={handleSearchChange}
+        value={searchBarText}
+        containerStyle={styles.searchBarContainer}
+        inputStyle={styles.searchBarText}
+        inputContainerStyle={styles.searchBarInputContainer}
+        searchIcon={{ size: 20, color: '#495E57' }}        
+        />
       </View>
       <View style={{ flexDirection: "row", alignItems: "left" }}>
         <Text style={styles.sectionTitle}>Order for Delivery</Text>
@@ -587,6 +586,25 @@ const styles = StyleSheet.create({
     height: 60,
     marginEnd: 10,
     borderRadius: 100,
+  },
+  searchBarContainer: {
+    marginBottom: 10,
+    paddingLeft:10,
+    paddingRight: 10,
+    backgroundColor: 'transparent',
+    borderBottomColor: 'transparent',
+    borderTopColor: 'transparent',
+  },
+  searchBarInputContainer: {
+    backgroundColor: '#EDEFEE',
+    borderRadius: 10,
+    height: 35,
+  },
+  searchBarText: {
+    color: '#495E57',
+    fontSize: 16,
+    
+    margin: 0,
   },
 });
 
