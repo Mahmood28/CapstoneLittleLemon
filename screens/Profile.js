@@ -14,7 +14,8 @@ import { MaskedTextInput } from "react-native-mask-text";
 import { CheckBox, Separator } from "react-native-btr";
 import * as ImagePicker from "expo-image-picker";
 import { GlobalStateContext } from "../GlobalStateProvider";
-import { clearAllMenuSQLDB } from "../MenuDatabase";
+import { deleteMenuItemsFromDB} from "../MenuDatabase";
+
 //import * as Font from 'expo-font';
 
 const validateEmail = (email) => {
@@ -234,6 +235,14 @@ const ProfileScreen = ({ navigation }) => {
       );
     }
     console.log("Async Storage Clear Done.");
+  };
+
+  const clearSQLiteDB = () => {
+    try {
+      deleteMenuItemsFromDB();
+    } catch (e) {
+      console.log("In clearSQLiteDB: error :", e);
+    }
   };
 
   const pickImage = async () => {
@@ -475,7 +484,7 @@ const ProfileScreen = ({ navigation }) => {
           onPress={async () => {
             console.log("Logout");
             clearAllAsyncStorage();
-            await clearAllMenuSQLDB();
+            clearSQLiteDB();
           }}
           disabled={false}
           style={styles.buttonEnabledLogout}

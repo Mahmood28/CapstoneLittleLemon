@@ -78,7 +78,7 @@ const OnboardingScreen = ({ navigation }) => {
 
     return;
   };
-  // TODO: change to Scrollview similar to ProfileScreen
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.headercontainer}>

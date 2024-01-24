@@ -10,8 +10,7 @@ import {
   FlatList,
 } from "react-native";
 import { GlobalStateContext } from "../GlobalStateProvider";
-import * as SQLite from 'expo-sqlite';
-import { createMenuTableInDBIfNotExisting, readAllMenuFromDB, writeMenuItemToDB, clearAllMenuDB, openSQLiteDB, db} from "../MenuDatabase";
+import { createMenuTableInDBIfNotExisting, readAllMenuFromDB, writeMenuItemToDB} from "../MenuDatabase";
 
 const HomeScreen = ({ navigation }) => {
   const [
@@ -165,20 +164,7 @@ const HomeScreen = ({ navigation }) => {
     );
   };
 
-  const readAllMenuFromDB = async () => {
-    console.log('In readAllMenuFromDB');
-    db.transaction((tx) => {
-      tx.executeSql(
-          'select * from menu;',
-          [],
-          (_, { rows: { _array } }) => setMenu(_array),
-          (_, error) => {console.log("Error in readAllMenuFromDB: ",error);}
-      )
-    }
-    )
-  };
-
-  const fetchDataFromAPI = async () => {
+  const fetchMenufromAPIAndWriteToSQLiteDB = async () => {
     try {
       const response = await fetch(API_URL);
 
@@ -186,12 +172,15 @@ const HomeScreen = ({ navigation }) => {
       const menujson = await json.menu;
 
       await createMenuTableInDBIfNotExisting();
+      
+      let i= 1;
       menujson.forEach(menuEntry => {
-        writeMenuItemToDB(menuEntry);
+        writeMenuItemToDB({id: i ,...menuEntry});
+        i++;
       });
 
     } catch (error) {
-      console.log("Error in fetchDataFromAPI when reading the menu: ",error);
+      console.log("Error in fetchMenufromAPIAndWriteToSQLiteDB when reading the menu: ",error);
     }
   };
 
@@ -200,24 +189,19 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const getMenuData = async () => {  
-    // 1. check if menu has stored data already, if not start reading from the SQLite DB
-    if (menu == null || menu.length == 0) {
-      try {
-        console.log("in getMenuData, menu is empty, read from SQLite DB now");
-        await readAllMenuFromDB();
+    try {
+      let menuFromDB = await readAllMenuFromDB();
 
-        // 2. check if menu is still without items, if so then read from API
-        if (menu == null || menu.length == 0) {
-          console.log("in getMenuData, menu is still empty, read from API now");
-          await fetchDataFromAPI();  // read menu from API into the SQLite DB
-          await readAllMenuFromDB(); // read menu from SQLite DB into the menu variable
-          console.log("in getMenuData, menu items read from API and stored in SQLite DB, menu read from DB");
-        } 
-      } catch (error) {
-        console.log("Error in creating or reading/writing DB-Table: ",error);
+      // 2. check if menuFromDB is without items, if so then read from API
+      if (menuFromDB == null || menuFromDB.length == 0) {
+        console.log("in getMenuData, menuFromDB is empty, read from API now");
+        await fetchMenufromAPIAndWriteToSQLiteDB();  // read menu from API into the SQLite DB
+        menuFromDB =await readAllMenuFromDB(); // read menu from SQLite DB into the menu variable
+        console.log("in getMenuData, menu items read from API and stored in SQLite DB, menu read from DB");
       }
-    } else {
-      console.log("in getMenuData, menu is right from the beginning NOT null and lenght > 0, menu: ", menu);
+      setMenu(menuFromDB);
+    } catch (error) {
+      console.log("Error in reading/writing DB-Table: ",error);
     }
   };
 
@@ -272,7 +256,6 @@ const HomeScreen = ({ navigation }) => {
 
   useEffect(() => {
     console.log("In HomeScreen: useEffect []");
-    openSQLiteDB();
     getUserDataWrapper();
     getMenuDataWrapper();
   }, []);
