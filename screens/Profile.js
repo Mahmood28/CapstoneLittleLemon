@@ -40,9 +40,7 @@ const ProfileScreen = ({ navigation }) => {
   const [validFirstName, setValidFirstName] = useState(false);
   const [validLastName, setValidLastName] = useState(false);
   const [validPhone, setValidPhone] = useState(false);
-
   
-
   const onChangeFirstName = (e) => {
     if (
       (userData.firstname != null && userData.firstname.length > 0) ||
@@ -51,9 +49,6 @@ const ProfileScreen = ({ navigation }) => {
       // skip leading spaces
       setUserData({ ...userData, firstname: e });
     }
-    setValidFirstName(
-      userData.firstname != null && userData.firstname.length > 0
-    );
   };
 
   const onChangeLastName = (e) => {
@@ -64,27 +59,20 @@ const ProfileScreen = ({ navigation }) => {
       // skip leading spaces
       setUserData({ ...userData, lastname: e });
     }
-    setValidLastName(userData.lastname != null && userData.lastname.length > 0);
   };
 
   const onChangeEmail = (e) => {
     setUserData({ ...userData, email: e });
-    setValidEmail(validateEmail(userData.email));
   };
 
   const onChangePhone = (e) => {
     setUserData({ ...userData, phone: e });
-    setValidPhone(userData.phone != null && userData.phone.length >= 17);
-    console.log(
-      "in onChangePhone: length of phone number: ",
-      userData.phone != null ? userData.phone.length : 0
-    );
   };
 
   const getUserData = async () => {
     try {
       const userDataStr = await AsyncStorage.getItem("userData");
-      const data = userDataStr != null ? JSON.parse(userDataStr) : null;
+      const data = userDataStr != null ? await JSON.parse(userDataStr) : null;
       setUserData(data);
     } catch (error) {
       setIsOnboardingCompleteFalse(); // Handle error of not stored userData - return to OnboardingScreen
@@ -93,9 +81,8 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const getUserDataWrapper = async () => {
-    console.log("in getUserDataWrapper");
+    // console.log("in getUserDataWrapper");
     await getUserData();
-    updateHeader();
   };
 
   const saveChanges = () => {
@@ -107,7 +94,6 @@ const ProfileScreen = ({ navigation }) => {
         "Changes saved",
         "Your profile has been updated successfully"
       );
-      // TODO: navigate to next screen
     } catch (error) {
       Alert.alert(
         "Changes could not be saved",
@@ -147,24 +133,25 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const AvatarTitle = () => {
-    console.log("in AvatarTitle");
+    // console.log("in AvatarTitle");
     if (userData.avatarImage != null) {
-        console.log("in AvatarTitle: userData.avatarImage: ", userData.avatarImage);
+        // console.log("in AvatarTitle: userData.avatarImage: ", userData.avatarImage);
         return (
         <Image
-          style={{ width: 50, height: 50, resizeMode: "contain" }}
+          style={styles.avatarImageSmall}
+          resizeMode="contain"
           source={{ uri: userData.avatarImage }}
         />
       );
     } else {
-        console.log("in AvatarTitle: userData.avatarImage IS null");
-        let initials = { first: ".", second: "." };
+        // console.log("in AvatarTitle: userData.avatarImage IS null");
+        let initial = { first: ".", second: "." };
         if (userData.firstname != null && userData.firstname.length > 0) {
-            console.log("in AvatarTitle: userData.firstname NOT null: ", userData.firstname);
-            initials.first = userData.firstname[0];
+            // console.log("in AvatarTitle: userData.firstname NOT null: ", userData.firstname);
+            initial.first = userData.firstname[0];
         }
         if (userData.lastname != null && userData.lastname.length > 0) {
-            initials.second = userData.lastname[0];
+            initial.second = userData.lastname[0];
         }
         return (
             <View
@@ -178,8 +165,7 @@ const ProfileScreen = ({ navigation }) => {
                 }}
             >
                 <Text style={{ fontSize: 40, fontWeight: "bold", color: "white" }}>
-                    {initials.first}
-                    {initials.second}
+                    {initial.first + initial.second}
                 </Text>
             </View>
         );
@@ -190,36 +176,6 @@ const ProfileScreen = ({ navigation }) => {
     navigation.setOptions({
       headerTitle: () => <LogoTitle />,
       headerRight: () => <AvatarTitle />,
-      headerLeft: () => (
-        <Pressable
-          onPress={() => {
-            console.log("In ProfileScreen: left arrow pressed");
-            //TODO: navigation.navigate('Home');
-          }}
-          disabled={false}
-          style={{
-            borderColor: "#495E57",
-            backgroundColor: "#495E57",
-            borderWidth: 0,
-            borderRadius: 20,
-            width: 40,
-            padding: 0,
-            margin: 0,
-            height: 40,
-          }}
-        >
-          <Text
-            style={{
-              color: "white",
-              textAlign: "center",
-              fontSize: 22,
-              fontWeight: "bold",
-            }}
-          >
-            &larr;
-          </Text>
-        </Pressable>
-      ),
     });
   };
 
@@ -228,26 +184,26 @@ const ProfileScreen = ({ navigation }) => {
       await AsyncStorage.clear();
       setIsOnboardingCompleteFalse(); // back to onboarding screen
     } catch (e) {
-      console.log("In clearAllAsyncStorage: error :", e);
+      // console.log("In clearAllAsyncStorage: error :", e);
       Alert.alert(
         "Logout failed",
         "Your profile has not been deleted. Please try again"
       );
     }
-    console.log("Async Storage Clear Done.");
+    // console.log("Async Storage Clear Done.");
   };
 
   const clearSQLiteDB = () => {
     try {
       deleteMenuItemsFromDB();
     } catch (e) {
-      console.log("In clearSQLiteDB: error :", e);
+      // console.log("In clearSQLiteDB: error :", e);
     }
   };
 
   const pickImage = async () => {
     // No permissions request is necessary for launching the image library
-    console.log("In ProfileScreen: pickImage");
+    // console.log("In ProfileScreen: pickImage");
     try {
       let result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.All,
@@ -255,9 +211,9 @@ const ProfileScreen = ({ navigation }) => {
         aspect: [4, 3],
         quality: 1,
       });
-      console.log("Result imagePicker: ", result);
+      // console.log("Result imagePicker: ", result);
       if (!result.canceled) {
-        console.log("Result imagePicker not canceled, userData: ", userData);
+        // console.log("Result imagePicker not canceled, userData: ", userData);
         return result.assets[0].uri;
       } else {
         return null;
@@ -332,19 +288,20 @@ const ProfileScreen = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
-    console.log("In ProfileScreen: useEffect [userData]", userData);
+    // console.log("In ProfileScreen: useEffect [userData]");
     if (userData != null) {
-        setValidFirstName(
-            userData.firstname != null && userData.firstname.length > 0
-        );
-        setValidLastName(
-            userData.lastname != null && userData.lastname.length > 0
-        );
-        setValidEmail(userData.email != null && validateEmail(userData.email));
-        setValidPhone(userData.phone != null && userData.phone.length >= 17);
-        updateHeader();
+      setValidFirstName(
+          userData.firstname != null && userData.firstname.length > 0
+      );
+      setValidLastName(
+          userData.lastname != null && userData.lastname.length > 0
+      );
+      setValidEmail(userData.email != null && validateEmail(userData.email));
+      setValidPhone(userData.phone != null && userData.phone.length >= 17);
     }
-  }, [userData]);
+    updateHeader();
+  }
+  , [userData]);
 
   return (
     <>
@@ -355,7 +312,7 @@ const ProfileScreen = ({ navigation }) => {
           <Avatar />
           <Pressable
             onPress={() => {
-              console.log("Change pressed");
+              // console.log("Change pressed");
               updateAvatar();
             }}
             disabled={false}
@@ -365,7 +322,7 @@ const ProfileScreen = ({ navigation }) => {
           </Pressable>
           <Pressable
             onPress={() => {
-              console.log("Remove");
+              // console.log("Remove");
               setUserData({ ...userData, avatarImage: null });
             }}
             disabled={false}
@@ -482,7 +439,7 @@ const ProfileScreen = ({ navigation }) => {
 
         <Pressable
           onPress={async () => {
-            console.log("Logout");
+            // console.log("Logout");
             clearAllAsyncStorage();
             clearSQLiteDB();
           }}
@@ -495,7 +452,7 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.innerContainer2}>
           <Pressable
             onPress={() => {
-              console.log("Discard changes");
+              // console.log("Discard changes");
               getUserDataWrapper();
             }}
             disabled={false}
@@ -505,7 +462,7 @@ const ProfileScreen = ({ navigation }) => {
           </Pressable>
           <Pressable
             onPress={() => {
-              console.log("Save changes");
+              // console.log("Save changes");
               saveChanges();
             }}
             disabled={
@@ -556,6 +513,13 @@ const styles = StyleSheet.create({
   avatarImage: {
     width: 80,
     height: 80,
+    borderRadius: 40,
+    borderColor: "lightgrey",
+    borderWidth: 1,
+  },
+  avatarImageSmall: {
+    width: 50,
+    height: 50,
     borderRadius: 40,
     borderColor: "lightgrey",
     borderWidth: 1,

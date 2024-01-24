@@ -9,6 +9,7 @@ import {
   TextInput,
   FlatList,
 } from "react-native";
+import { useFocusEffect } from '@react-navigation/native';
 import { SearchBar } from "react-native-elements";
 import debounce from 'lodash.debounce';
 import { GlobalStateContext } from "../GlobalStateProvider";
@@ -52,7 +53,7 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const getUserDataWrapper = async () => {
-    console.log("in getUserDataWrapper");
+    // console.log("in getUserDataWrapper");
     await getUserData();
     updateHeader();
   };
@@ -67,34 +68,27 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const AvatarTitle = () => {
-    console.log("in AvatarTitle");
+    // console.log("in AvatarTitle");
     if (userData.avatarImage != null) {
-      console.log(
-        "in AvatarTitle: userData.avatarImage: ",
-        userData.avatarImage
-      );
       return (
         <Pressable
           onPress={() => {
-            console.log("In HomeScreen: Avatar in Header pressed");
+            // console.log("In HomeScreen: Avatar in Header pressed");
             navigation.navigate("Profile");
           }}
           disabled={false}
         >
           <Image
-            style={{ width: 50, height: 50, resizeMode: "contain" }}
+            style={styles.avatarImageSmall}
+            resizeMode="contain"
             source={{ uri: userData.avatarImage }}
           />
         </Pressable>
       );
     } else {
-      console.log("in AvatarTitle: userData.avatarImage IS null");
+      // console.log("in AvatarTitle: userData.avatarImage IS null");
       let initials = { first: ".", second: "." };
       if (userData.firstname != null && userData.firstname.length > 0) {
-        console.log(
-          "in AvatarTitle: userData.firstname NOT null: ",
-          userData.firstname
-        );
         initials.first = userData.firstname[0];
       }
       if (userData.lastname != null && userData.lastname.length > 0) {
@@ -103,7 +97,7 @@ const HomeScreen = ({ navigation }) => {
       return (
         <Pressable
           onPress={() => {
-            console.log("In HomeScreen: Avatar in Header pressed");
+            // console.log("In HomeScreen: Avatar in Header pressed");
             navigation.navigate("Profile");
           }}
           disabled={false}
@@ -132,36 +126,6 @@ const HomeScreen = ({ navigation }) => {
     navigation.setOptions({
       headerTitle: () => <LogoTitle />,
       headerRight: () => <AvatarTitle />,
-      headerLeft: () => (
-        <Pressable
-          onPress={() => {
-            console.log("In HomeScreen: left arrow pressed");
-            //TODO: navigation.navigate('???');
-          }}
-          disabled={false}
-          style={{
-            borderColor: "#495E57",
-            backgroundColor: "#495E57",
-            borderWidth: 0,
-            borderRadius: 20,
-            width: 40,
-            padding: 0,
-            margin: 0,
-            height: 40,
-          }}
-        >
-          <Text
-            style={{
-              color: "white",
-              textAlign: "center",
-              fontSize: 22,
-              fontWeight: "bold",
-            }}
-          >
-            &larr;
-          </Text>
-        </Pressable>
-      ),
     });
   };
 
@@ -219,7 +183,7 @@ const HomeScreen = ({ navigation }) => {
         console.log("in getMenuData, menuFromDB is empty, read from API now");
         await fetchMenufromAPIAndWriteToSQLiteDB();  // read menu from API into the SQLite DB
         menuFromDB =await readAllMenuFromDB(); // read menu from SQLite DB into the menu variable
-        console.log("in getMenuData, menu items read from API and stored in SQLite DB, menu read from DB");
+        // console.log("in getMenuData, menu items read from API and stored in SQLite DB, menu read from DB");
       }
       setMenu(menuFromDB);
     } catch (error) {
@@ -298,12 +262,14 @@ const HomeScreen = ({ navigation }) => {
   };
 
   useEffect(() => {
+    // this useEffect ensure initial loading of UserData and MenuData
     // console.log("In HomeScreen: useEffect []");
     getUserDataWrapper();
     getMenuDataWrapper();
   }, []);
 
   useEffect(() => {
+    // this useEffect ensures that the menu items will be updated when the filter or query is changed
     (async () => {
       const activeCategories = categories.filter((c, i) => {
         // If all filters are deselected, all categories are active
@@ -322,6 +288,22 @@ const HomeScreen = ({ navigation }) => {
       }
     })();
   }, [filterSelections, query]);
+
+  useEffect(() => {
+    // this useEffect is to ensure that the avatar image will be updated when the userData changes
+    updateHeader();
+  }, [userData]);
+
+  useFocusEffect(
+    // useFocusEffect is to ensure the userData will be updated after returning from the ProfileScreen
+    React.useCallback(() => {
+      // console.log("In HomeScreen: useFocusEffect");
+      getUserDataWrapper();
+      return () => {
+        // console.log("In HomeScreen: useFocusEffect cleanup");
+      };
+    }, [])
+  );
 
   return (
     <View style={styles.container}>
@@ -593,11 +575,12 @@ const styles = StyleSheet.create({
     height: 70,
     marginStart: 10,
   },
-  avatarImageHeadline: {
-    width: 60,
-    height: 60,
-    marginEnd: 10,
-    borderRadius: 100,
+  avatarImageSmall: {
+    width: 50,
+    height: 50,
+    borderRadius: 40,
+    borderColor: "lightgrey",
+    borderWidth: 1,
   },
   searchBarContainer: {
     marginBottom: 10,
