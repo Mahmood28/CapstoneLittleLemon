@@ -10,7 +10,10 @@ import {
   FlatList,
 } from "react-native";
 import { GlobalStateContext } from "../GlobalStateProvider";
-import { createMenuTableInDBIfNotExisting, readAllMenuFromDB, writeMenuItemToDB} from "../MenuDatabase";
+import { createMenuTableInDBIfNotExisting, readAllMenuFromDB, writeMenuItemToDB, filterByQueryAndCategories} from "../MenuDatabase";
+
+const API_URL = 'https://raw.githubusercontent.com/Meta-Mobile-Developer-PC/Working-With-Data-API/main/capstone.json';
+const categories = ['starters', 'mains', 'desserts', 'drinks'];
 
 const HomeScreen = ({ navigation }) => {
   const [
@@ -22,8 +25,9 @@ const HomeScreen = ({ navigation }) => {
   ] = React.useContext(GlobalStateContext);
   const [userData, setUserData] = useState({});
   const [menu, setMenu] = useState([]);
-
-  const API_URL = 'https://raw.githubusercontent.com/Meta-Mobile-Developer-PC/Working-With-Data-API/main/capstone.json';
+  const [query, setQuery] = useState('');
+  const [filterSelections, setFilterSelections] = useState(categories.map(() => false)
+  );
 
   const getUserData = async () => {
     try {
@@ -150,16 +154,23 @@ const HomeScreen = ({ navigation }) => {
     });
   };
 
-  const FilterButton = ({ text, fn }) => {
+  const FilterButton = ({ text}) => {
     return (
       <Pressable
         onPress={() => {
-          console.log("button pressed: ", text);
-          fn();
+          // console.log("button pressed: ", text);
+          // console.log("filterselection of text: ", filterSelections[categories.indexOf(text)]);
+          setFilterSelections(
+            filterSelections.map((item, index) =>
+              index === categories.indexOf(text) ? !item : item
+            )
+          );
+          // console.log("filterselections: ", filterSelections);
+          
         }}
-        style={styles.buttonLightgreenRound}
+        style={filterSelections[categories.indexOf(text)] ? styles.buttonFilterPressed : styles.buttonFilterNOTPressed}
       >
-        <Text style={styles.buttonTextGreen}>{text}</Text>
+        <Text style={filterSelections[categories.indexOf(text)]  ? styles.buttonTextWhite: styles.buttonTextGreen}>{text}</Text>
       </Pressable>
     );
   };
@@ -222,7 +233,7 @@ const HomeScreen = ({ navigation }) => {
           marginTop: 10,
         }}
       >
-        <View style={{flex: 5, marginRight: 10, borderColor: 'orange', borderWidth: 1}}>
+        <View style={{flex: 5, marginRight: 10}}>
           <Text style={styles.itemTitle}>{item.name}</Text>
           <Text style={styles.itemDescription} numberOfLines={2}>{item.description}</Text>
           <Text style={styles.itemPrice}>${item.price}</Text>
@@ -260,6 +271,26 @@ const HomeScreen = ({ navigation }) => {
     getMenuDataWrapper();
   }, []);
 
+  useEffect(() => {
+    (async () => {
+      const activeCategories = categories.filter((c, i) => {
+        // If all filters are deselected, all categories are active
+        if (filterSelections.every((item) => item === false)) {
+          return true;
+        }
+        return filterSelections[i];
+      });
+      // console.log("In HomeScreen: useEffect [filterSelections], activeCategories: ", activeCategories);
+      try {
+        const filteredMenuItems = await filterByQueryAndCategories(query, activeCategories);
+        // console.log("In HomeScreen: useEffect [filterSelections], filteredMenuItems: ", filteredMenuItems);
+        setMenu(filteredMenuItems);
+      } catch (e) {
+        // console.log("In HomeScreen: useEffect [filterSelections], error: ", e);
+      }
+    })();
+  }, [filterSelections, query]);
+
   return (
     <View style={styles.container}>
       <View style={styles.innerContainer1}>
@@ -269,8 +300,8 @@ const HomeScreen = ({ navigation }) => {
             style={{
               flex: 5,
               marginRight: 5,
-              borderColor: "orange",
-              borderWidth: 1,
+              // borderColor: "orange",
+              // borderWidth: 1,
             }}
           >
             <Text style={styles.cityName}>Chicago</Text>
@@ -283,8 +314,8 @@ const HomeScreen = ({ navigation }) => {
             style={{
               flex: 3,
               marginLeft: 5,
-              borderColor: "orange",
-              borderWidth: 1,
+              // borderColor: "orange",
+              // borderWidth: 1,
             }}
           >
             <Image
@@ -341,28 +372,16 @@ const HomeScreen = ({ navigation }) => {
         }}
       >
         <FilterButton
-          text="Starters"
-          fn={() => {
-            console.log("Filter on Startes");
-          }}
+          text="starters"
         />
         <FilterButton
-          text="Mains"
-          fn={() => {
-            console.log("Filter on Mains");
-          }}
+          text="mains"
         />
         <FilterButton
-          text="Desserts"
-          fn={() => {
-            console.log("Filter on Desserts");
-          }}
+          text="desserts"
         />
         <FilterButton
-          text="Drinks"
-          fn={() => {
-            console.log("Filter on Drinks");
-          }}
+          text="drinks"
         />
       </View>
       <View
@@ -477,7 +496,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     width: 80,
   },
-  buttonLightgreenRound: {
+  buttonFilterNOTPressed: {
     padding: 6,
     borderColor: "#EDEFEE",
     backgroundColor: "#EDEFEE",
@@ -485,8 +504,21 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     width: 80,
   },
+  buttonFilterPressed: {
+    padding: 6,
+    borderColor: "#495E57",
+    backgroundColor: "#495E57",
+    borderWidth: 2,
+    borderRadius: 16,
+    width: 80,
+  },
   buttonTextGreen: {
     color: "#495E57",
+    textAlign: "center",
+    fontSize: 16,
+  },
+  buttonTextWhite: {
+    color: "white",
     textAlign: "center",
     fontSize: 16,
   },

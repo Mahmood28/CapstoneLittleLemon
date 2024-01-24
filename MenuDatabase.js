@@ -27,11 +27,36 @@ export async function readAllMenuFromDB () {
                 },
                 (_, error) => {
                     console.log("Error in getMenuItems: ",error);
-                    resolve([]); // no entries found
+                    resolve([]); // error => no entries found
                 });
             });
     });
 }
+
+export async function filterByQueryAndCategories(query, activeCategories) {
+    // console.log('filterByQueryAndCategories', query, activeCategories);
+    return new Promise((resolve, reject) => {
+      db.transaction((tx) => {
+        tx.executeSql(
+          `SELECT * FROM menu WHERE name LIKE "%${query}%" AND category IN (${activeCategories.map(
+            (item) => `'${item}'`
+          )})`,
+          [],
+          (_, results) => {
+            var len = results.rows.length;
+            // console.log('Number of menu items, len', len);
+            // console.log('results.rows._array', results.rows._array);
+            resolve(results.rows._array);
+            },
+          (_, error) => {
+            console.log("Error in filterByQueryAndcategories ", error);
+            resolve([]); // error => no entries found
+          }
+        );
+      });
+    });
+  }
+  
 
 export const writeMenuItemToDB = async (menuItem) => {
     // console.log('writeMenuItemToDB, item: ', menuItem.id, menuItem.name, menuItem.description, menuItem.price, menuItem.image, menuItem.category);
