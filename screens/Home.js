@@ -15,7 +15,7 @@ import { GlobalStateContext } from "../GlobalStateProvider";
 import { createMenuTableInDBIfNotExisting, readAllMenuFromDB, writeMenuItemToDB, filterByQueryAndCategories} from "../MenuDatabase";
 
 const API_URL = 'https://raw.githubusercontent.com/Meta-Mobile-Developer-PC/Working-With-Data-API/main/capstone.json';
-const categories = ['starters', 'mains', 'desserts', 'drinks'];
+const categories = ['starters', 'mains', 'desserts', 'drinks', 'sides', 'nonalc'];
 
 const HomeScreen = ({ navigation }) => {
   const [
@@ -30,6 +30,15 @@ const HomeScreen = ({ navigation }) => {
   const [query, setQuery] = useState('');
   const [filterSelections, setFilterSelections] = useState(categories.map(() => false));
   const [searchBarText, setSearchBarText] = useState('');
+
+  const [filterButtons, setFilterButtons] = useState(
+    categories.map((category) => {
+      return {
+        category: category,
+        id: categories.indexOf(category),
+      }
+    })
+  );
 
   const getUserData = async () => {
     try {
@@ -157,6 +166,7 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const FilterButton = ({ text}) => {
+    // console.log("in FilterButton, text = ", text);
     return (
       <Pressable
         onPress={() => {
@@ -168,7 +178,6 @@ const HomeScreen = ({ navigation }) => {
             )
           );
           // console.log("filterselections: ", filterSelections);
-          
         }}
         style={filterSelections[categories.indexOf(text)] ? styles.buttonFilterPressed : styles.buttonFilterNOTPressed}
       >
@@ -217,6 +226,18 @@ const HomeScreen = ({ navigation }) => {
       console.log("Error in reading/writing DB-Table: ",error);
     }
   };
+
+  const renderFilterButtonItem = ({ item }) => {
+    return (
+      <FilterButton text={item.category} />
+    );
+  };
+
+  const FlatListFilterButtonSeparator = () => {
+    return (
+      <Text>  </Text>
+    );
+    }
 
   const renderItem = ({ item }) => {
     let imageUri = `https://github.com/Meta-Mobile-Developer-PC/Working-With-Data-API/blob/main/images/${item.image}?raw=true`;
@@ -277,7 +298,7 @@ const HomeScreen = ({ navigation }) => {
   };
 
   useEffect(() => {
-    console.log("In HomeScreen: useEffect []");
+    // console.log("In HomeScreen: useEffect []");
     getUserDataWrapper();
     getMenuDataWrapper();
   }, []);
@@ -363,24 +384,13 @@ const HomeScreen = ({ navigation }) => {
           source={require("../img/DeliveryVan.png")}
         />
       </View>
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-evenly",
-          marginTop: 10,
-        }}
-      >
-        <FilterButton
-          text="starters"
-        />
-        <FilterButton
-          text="mains"
-        />
-        <FilterButton
-          text="desserts"
-        />
-        <FilterButton
-          text="drinks"
+      <View style={{height:'auto'}}>
+        <FlatList
+          horizontal={true}
+          data={filterButtons}
+          renderItem={renderFilterButtonItem}
+          keyExtractor={(item) => item.id}
+          ItemSeparatorComponent={FlatListFilterButtonSeparator}
         />
       </View>
       <View
@@ -502,6 +512,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderRadius: 16,
     width: 80,
+    height: 40,
   },
   buttonFilterPressed: {
     padding: 6,
@@ -510,6 +521,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderRadius: 16,
     width: 80,
+    height: 40,
   },
   buttonTextGreen: {
     color: "#495E57",
