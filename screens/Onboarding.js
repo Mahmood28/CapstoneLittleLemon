@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 import {
   View,
   StyleSheet,
@@ -7,7 +7,6 @@ import {
   Pressable,
   TextInput,
   ScrollView,
-  KeyboardAvoidingView,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GlobalStateContext } from "../GlobalStateProvider";
@@ -46,13 +45,6 @@ const OnboardingScreen = ({ navigation }) => {
   };
 
   const storeUserInfo = async () => {
-    console.log(
-      "Next button pressed, firstname: *" +
-        firstname +
-        "* email: *" +
-        email +
-        "*"
-    );
     let userData = {
       firstname: firstname,
       lastname: null,
@@ -66,7 +58,6 @@ const OnboardingScreen = ({ navigation }) => {
     };
     try {
       await AsyncStorage.setItem("userData", JSON.stringify(userData));
-      console.log("wrote userData");
       setIsOnboardingCompleteTrue();
     } catch (error) {
       console.log(error);
@@ -87,15 +78,13 @@ const OnboardingScreen = ({ navigation }) => {
           source={require("../img/Logo.png")}
           resizeMode="contain"
           accessible={true}
-          accessibilityLabel={"Little Lemon Logo Grey"}
+          accessibilityLabel={"Little Lemon Logo"}
         />
       </View>
 
       <View style={styles.textInputContainer}>
         <Text style={styles.regularText}>Let us get to know you</Text>
-        <Text style={{ ...styles.regularText, marginTop: 40 }}>
-          First Name
-        </Text>
+        <Text style={{ ...styles.regularText, marginTop: 40 }}>First Name</Text>
         <TextInput
           style={styles.inputBox}
           value={firstname}
@@ -143,7 +132,7 @@ const styles = StyleSheet.create({
   textInputContainer: {
     backgroundColor: "grey",
     alignItems: "center",
-    paddingVertical : 40,
+    paddingVertical: 40,
   },
   footercontainer: {
     backgroundColor: "lightgrey",
@@ -175,7 +164,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     marginTop: 20,
     marginLeft: "70%",
-    marginBottom: 20
+    marginBottom: 20,
   },
   buttonDisabled: {
     padding: 6,

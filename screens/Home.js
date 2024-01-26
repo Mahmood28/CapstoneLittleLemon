@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback} from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   View,
@@ -6,17 +6,29 @@ import {
   Pressable,
   Text,
   StyleSheet,
-  TextInput,
   FlatList,
 } from "react-native";
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect } from "@react-navigation/native";
 import { SearchBar } from "react-native-elements";
-import debounce from 'lodash.debounce';
+import debounce from "lodash.debounce";
 import { GlobalStateContext } from "../GlobalStateProvider";
-import { createMenuTableInDBIfNotExisting, readAllMenuFromDB, writeMenuItemToDB, filterByQueryAndCategories} from "../MenuDatabase";
+import {
+  createMenuTableInDBIfNotExisting,
+  readAllMenuFromDB,
+  writeMenuItemToDB,
+  filterByQueryAndCategories,
+} from "../MenuDatabase";
 
-const API_URL = 'https://raw.githubusercontent.com/Meta-Mobile-Developer-PC/Working-With-Data-API/main/capstone.json';
-const categories = ['starters', 'mains', 'desserts', 'drinks', 'sides', 'nonalc'];
+const API_URL =
+  "https://raw.githubusercontent.com/Meta-Mobile-Developer-PC/Working-With-Data-API/main/capstone.json";
+const categories = [
+  "starters",
+  "mains",
+  "desserts",
+  "drinks",
+  "sides",
+  "nonalc",
+];
 
 const HomeScreen = ({ navigation }) => {
   const [
@@ -28,16 +40,18 @@ const HomeScreen = ({ navigation }) => {
   ] = React.useContext(GlobalStateContext);
   const [userData, setUserData] = useState({});
   const [menu, setMenu] = useState([]);
-  const [query, setQuery] = useState('');
-  const [filterSelections, setFilterSelections] = useState(categories.map(() => false));
-  const [searchBarText, setSearchBarText] = useState('');
+  const [query, setQuery] = useState("");
+  const [filterSelections, setFilterSelections] = useState(
+    categories.map(() => false)
+  );
+  const [searchBarText, setSearchBarText] = useState("");
 
   const [filterButtons, setFilterButtons] = useState(
     categories.map((category) => {
       return {
         category: category,
         id: categories.indexOf(category),
-      }
+      };
     })
   );
 
@@ -53,7 +67,6 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const getUserDataWrapper = async () => {
-    // console.log("in getUserDataWrapper");
     await getUserData();
     updateHeader();
   };
@@ -63,30 +76,31 @@ const HomeScreen = ({ navigation }) => {
       <Image
         style={{ height: 70, resizeMode: "contain" }}
         source={require("../img/Logo.png")}
+        accessible={true}
+        accessibilityLabel={"Little Lemon Logo"}
       />
     );
   };
 
   const AvatarTitle = () => {
-    // console.log("in AvatarTitle");
     if (userData.avatarImage != null) {
       return (
         <Pressable
           onPress={() => {
-            // console.log("In HomeScreen: Avatar in Header pressed");
             navigation.navigate("Profile");
           }}
           disabled={false}
         >
           <Image
             style={styles.avatarImageSmall}
-            resizeMode="contain"
+            resizeMode="cover"
             source={{ uri: userData.avatarImage }}
+            accessible={true}
+            accessibilityLabel={"Avatar imgage"}
           />
         </Pressable>
       );
     } else {
-      // console.log("in AvatarTitle: userData.avatarImage IS null");
       let initials = { first: ".", second: "." };
       if (userData.firstname != null && userData.firstname.length > 0) {
         initials.first = userData.firstname[0];
@@ -97,7 +111,6 @@ const HomeScreen = ({ navigation }) => {
       return (
         <Pressable
           onPress={() => {
-            // console.log("In HomeScreen: Avatar in Header pressed");
             navigation.navigate("Profile");
           }}
           disabled={false}
@@ -112,7 +125,7 @@ const HomeScreen = ({ navigation }) => {
               justifyContent: "center",
             }}
           >
-            <Text style={{ fontSize: 40, fontWeight: "bold", color: "white" }}>
+            <Text style={{ fontSize: 30, fontWeight: "bold", color: "white" }}>
               {initials.first}
               {initials.second}
             </Text>
@@ -129,23 +142,31 @@ const HomeScreen = ({ navigation }) => {
     });
   };
 
-  const FilterButton = ({ text}) => {
-    // console.log("in FilterButton, text = ", text);
+  const FilterButton = ({ text }) => {
     return (
       <Pressable
         onPress={() => {
-          // console.log("button pressed: ", text);
-          // console.log("filterselection of text: ", filterSelections[categories.indexOf(text)]);
           setFilterSelections(
             filterSelections.map((item, index) =>
               index === categories.indexOf(text) ? !item : item
             )
           );
-          // console.log("filterselections: ", filterSelections);
         }}
-        style={filterSelections[categories.indexOf(text)] ? styles.buttonFilterPressed : styles.buttonFilterNOTPressed}
+        style={
+          filterSelections[categories.indexOf(text)]
+            ? styles.buttonFilterPressed
+            : styles.buttonFilterNOTPressed
+        }
       >
-        <Text style={filterSelections[categories.indexOf(text)]  ? styles.buttonTextWhite: styles.buttonTextGreen}>{text}</Text>
+        <Text
+          style={
+            filterSelections[categories.indexOf(text)]
+              ? styles.buttonTextWhite
+              : styles.buttonTextGreen
+          }
+        >
+          {text}
+        </Text>
       </Pressable>
     );
   };
@@ -158,15 +179,17 @@ const HomeScreen = ({ navigation }) => {
       const menujson = await json.menu;
 
       await createMenuTableInDBIfNotExisting();
-      
-      let i= 1;
-      menujson.forEach(menuEntry => {
-        writeMenuItemToDB({id: i ,...menuEntry});
+
+      let i = 1;
+      menujson.forEach((menuEntry) => {
+        writeMenuItemToDB({ id: i, ...menuEntry });
         i++;
       });
-
     } catch (error) {
-      console.log("Error in fetchMenufromAPIAndWriteToSQLiteDB when reading the menu: ",error);
+      console.log(
+        "Error in fetchMenufromAPIAndWriteToSQLiteDB when reading the menu: ",
+        error
+      );
     }
   };
 
@@ -174,63 +197,61 @@ const HomeScreen = ({ navigation }) => {
     await getMenuData();
   };
 
-  const getMenuData = async () => {  
+  const getMenuData = async () => {
     try {
       let menuFromDB = await readAllMenuFromDB();
 
-      // 2. check if menuFromDB is without items, if so then read from API
+      // check if menuFromDB is without items, if so then read from API
       if (menuFromDB == null || menuFromDB.length == 0) {
-        console.log("in getMenuData, menuFromDB is empty, read from API now");
-        await fetchMenufromAPIAndWriteToSQLiteDB();  // read menu from API into the SQLite DB
-        menuFromDB =await readAllMenuFromDB(); // read menu from SQLite DB into the menu variable
-        // console.log("in getMenuData, menu items read from API and stored in SQLite DB, menu read from DB");
+        await fetchMenufromAPIAndWriteToSQLiteDB(); // read menu from API into the SQLite DB
+        menuFromDB = await readAllMenuFromDB(); // read menu from SQLite DB into the menu variable
       }
       setMenu(menuFromDB);
     } catch (error) {
-      console.log("Error in reading/writing DB-Table: ",error);
+      console.log("Error in reading/writing DB-Table: ", error);
     }
   };
 
   const renderFilterButtonItem = ({ item }) => {
-    return (
-      <FilterButton text={item.category} />
-    );
+    return <FilterButton text={item.category} />;
   };
 
   const FlatListFilterButtonSeparator = () => {
-    return (
-      <Text>  </Text>
-    );
-    }
+    return <Text> </Text>;
+  };
 
   const renderItem = ({ item }) => {
     let imageUri = `https://github.com/Meta-Mobile-Developer-PC/Working-With-Data-API/blob/main/images/${item.image}?raw=true`;
     return (
       <Pressable
-      onPress={() => {
-        console.log("button pressed: ", item.id, item.name);
-        // TODO:
-      }}
-      >
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-evenly",
-          width: '100%',
-          marginTop: 10,
+        onPress={() => {
+          // console.log("button pressed: ", item.id, item.name);
+          // TODO: show more info about the menu item pressed on
         }}
       >
-        <View style={{flex: 5, marginRight: 10}}>
-          <Text style={styles.itemTitle}>{item.name}</Text>
-          <Text style={styles.itemDescription} numberOfLines={2}>{item.description}</Text>
-          <Text style={styles.itemPrice}>${item.price}</Text>
-        </View>
-        <Image
-            style={{flex: 2, resizeMode: "contain" }}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-evenly",
+            width: "100%",
+            marginTop: 10,
+          }}
+        >
+          <View style={{ flex: 5, marginRight: 10 }}>
+            <Text style={styles.itemTitle}>{item.name}</Text>
+            <Text style={styles.itemDescription} numberOfLines={2}>
+              {item.description}
+            </Text>
+            <Text style={styles.itemPrice}>${item.price}</Text>
+          </View>
+          <Image
+            style={{ flex: 2, resizeMode: "cover", marginTop: 20, marginLeft: 10 }}
             source={{ uri: imageUri }}
+            accessible={true}
+            accessibilityLabel={item.name}
           />
-      </View>
-    </Pressable> 
+        </View>
+      </Pressable>
     );
   };
 
@@ -262,8 +283,7 @@ const HomeScreen = ({ navigation }) => {
   };
 
   useEffect(() => {
-    // this useEffect ensure initial loading of UserData and MenuData
-    // console.log("In HomeScreen: useEffect []");
+    // this useEffect ensures initial loading of UserData and MenuData
     getUserDataWrapper();
     getMenuDataWrapper();
   }, []);
@@ -278,13 +298,14 @@ const HomeScreen = ({ navigation }) => {
         }
         return filterSelections[i];
       });
-      // console.log("In HomeScreen: useEffect [filterSelections], activeCategories: ", activeCategories);
       try {
-        const filteredMenuItems = await filterByQueryAndCategories(query, activeCategories);
-        // console.log("In HomeScreen: useEffect [filterSelections], filteredMenuItems: ", filteredMenuItems);
+        const filteredMenuItems = await filterByQueryAndCategories(
+          query,
+          activeCategories
+        );
         setMenu(filteredMenuItems);
       } catch (e) {
-        // console.log("In HomeScreen: useEffect [filterSelections], error: ", e);
+        console.log("In HomeScreen: useEffect [filterSelections], error: ", e);
       }
     })();
   }, [filterSelections, query]);
@@ -297,7 +318,6 @@ const HomeScreen = ({ navigation }) => {
   useFocusEffect(
     // useFocusEffect is to ensure the userData will be updated after returning from the ProfileScreen
     React.useCallback(() => {
-      // console.log("In HomeScreen: useFocusEffect");
       getUserDataWrapper();
       return () => {
         // console.log("In HomeScreen: useFocusEffect cleanup");
@@ -312,14 +332,12 @@ const HomeScreen = ({ navigation }) => {
         <View style={styles.innerContainer2}>
           <View
             style={{
-              flex: 5,
+              flex: 4,
               marginRight: 5,
-              // borderColor: "orange",
-              // borderWidth: 1,
             }}
           >
             <Text style={styles.cityName}>Chicago</Text>
-            <Text style={styles.regularText} numberOfLines={5}>
+            <Text style={styles.regularText}>
               We are a family owned Mediterranean restaurant, focused on
               traditional recipes served with a modern twist.
             </Text>
@@ -327,31 +345,34 @@ const HomeScreen = ({ navigation }) => {
           <View
             style={{
               flex: 3,
-              marginLeft: 5,
-              // borderColor: "orange",
-              // borderWidth: 1,
+              marginLeft: 0,
+              marginRight: 0,
             }}
           >
             <Image
               style={{
-                width: 120,
-                height: 120,
+                width: 140,
+                height: 140,
                 borderRadius: 20,
-                resizeMode: "contain",
+                resizeMode: "cover",
+                marginRight:0,
+                paddingRight:0,
               }}
               source={require("../img/Heroimage.png")}
+              accessible={true}
+              accessibilityLabel={"image showing a menu of food"}
             />
           </View>
         </View>
         <SearchBar
-        placeholder="Search"
-        placeholderTextColor='#495E57'
-        onChangeText={handleSearchChange}
-        value={searchBarText}
-        containerStyle={styles.searchBarContainer}
-        inputStyle={styles.searchBarText}
-        inputContainerStyle={styles.searchBarInputContainer}
-        searchIcon={{ size: 20, color: '#495E57' }}        
+          placeholder="Search"
+          placeholderTextColor="#495E57"
+          onChangeText={handleSearchChange}
+          value={searchBarText}
+          containerStyle={styles.searchBarContainer}
+          inputStyle={styles.searchBarText}
+          inputContainerStyle={styles.searchBarInputContainer}
+          searchIcon={{ size: 20, color: "#495E57" }}
         />
       </View>
       <View style={{ flexDirection: "row", alignItems: "left" }}>
@@ -364,9 +385,11 @@ const HomeScreen = ({ navigation }) => {
             marginLeft: 20,
           }}
           source={require("../img/DeliveryVan.png")}
+          accessible={true}
+          accessibilityLabel={"icon showing a delivery van"}
         />
       </View>
-      <View style={{height:'auto'}}>
+      <View style={{ height: "auto" }}>
         <FlatList
           horizontal={true}
           data={filterButtons}
@@ -405,6 +428,7 @@ const styles = StyleSheet.create({
   innerContainer1: {
     paddingTop: 0,
     paddingRight: 0,
+    paddingLeft: 8,
     alignItems: "left",
     backgroundColor: "#495E57",
   },
@@ -413,7 +437,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-evenly",
     paddingTop: 0,
     paddingLeft: 10,
-    paddingRight: 10,
+    paddingRight: 0,
     paddingBottom: 0,
     alignItems: "center",
   },
@@ -474,8 +498,8 @@ const styles = StyleSheet.create({
   regularText: {
     fontSize: 16,
     fontWeight: "bold",
-    padding: 8,
     marginTop: 10,
+    marginBottom: 10,
     color: "white",
     textAlign: "left",
   },
@@ -584,21 +608,21 @@ const styles = StyleSheet.create({
   },
   searchBarContainer: {
     marginBottom: 10,
-    paddingLeft:10,
-    paddingRight: 10,
-    backgroundColor: 'transparent',
-    borderBottomColor: 'transparent',
-    borderTopColor: 'transparent',
+    paddingLeft: 8,
+    paddingRight: 20,
+    backgroundColor: "transparent",
+    borderBottomColor: "transparent",
+    borderTopColor: "transparent",
   },
   searchBarInputContainer: {
-    backgroundColor: '#EDEFEE',
+    backgroundColor: "#EDEFEE",
     borderRadius: 10,
     height: 35,
   },
   searchBarText: {
-    color: '#495E57',
+    color: "#495E57",
     fontSize: 16,
-    
+
     margin: 0,
   },
 });

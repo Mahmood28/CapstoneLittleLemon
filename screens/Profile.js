@@ -11,12 +11,11 @@ import {
   Alert,
 } from "react-native";
 import { MaskedTextInput } from "react-native-mask-text";
-import { CheckBox, Separator } from "react-native-btr";
+import { CheckBox } from "react-native-btr";
 import * as ImagePicker from "expo-image-picker";
 import { GlobalStateContext } from "../GlobalStateProvider";
 import { deleteMenuItemsFromDB} from "../MenuDatabase";
 
-//import * as Font from 'expo-font';
 
 const validateEmail = (email) => {
   if (email == null || email.length === 0) {
@@ -81,7 +80,6 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const getUserDataWrapper = async () => {
-    // console.log("in getUserDataWrapper");
     await getUserData();
   };
 
@@ -89,7 +87,6 @@ const ProfileScreen = ({ navigation }) => {
     try {
       AsyncStorage.setItem("userData", JSON.stringify(userData));
       updateHeader();
-      // show success message
       Alert.alert(
         "Changes saved",
         "Your profile has been updated successfully"
@@ -103,51 +100,31 @@ const ProfileScreen = ({ navigation }) => {
     }
   };
 
-  // const loadFont = async () => {
-  //     await Font.loadAsync({
-  //       'MarkaziText': require('../assets/fonts/MarkaziText-Regular.ttf'),
-  //     });
-  // }
-
-  // const loadFontWrapper = async () => {
-  //     await loadFont();
-  //     setFontLoaded(true);
-  // }
-
-  // const saveChanges = async () => {
-  // try {
-  //     await AsyncStorage.setItem('userData', JSON.stringify(userData));
-  //     console.log('User data saved successfully');
-  // } catch (error) {
-  //     console.log('Error saving user data', error);
-  // }
-  // };
-
   const LogoTitle = () => {
     return (
       <Image
         style={{ height: 70, resizeMode: "contain" }}
         source={require("../img/Logo.png")}
+        accessible={true}
+        accessibilityLabel={"Little Lemon Logo"}
       />
     );
   };
 
   const AvatarTitle = () => {
-    // console.log("in AvatarTitle");
     if (userData.avatarImage != null) {
-        // console.log("in AvatarTitle: userData.avatarImage: ", userData.avatarImage);
         return (
         <Image
           style={styles.avatarImageSmall}
-          resizeMode="contain"
+          resizeMode="cover"
           source={{ uri: userData.avatarImage }}
+          accessible={true}
+          accessibilityLabel={"Avatar imgage"}
         />
       );
     } else {
-        // console.log("in AvatarTitle: userData.avatarImage IS null");
         let initial = { first: ".", second: "." };
         if (userData.firstname != null && userData.firstname.length > 0) {
-            // console.log("in AvatarTitle: userData.firstname NOT null: ", userData.firstname);
             initial.first = userData.firstname[0];
         }
         if (userData.lastname != null && userData.lastname.length > 0) {
@@ -164,7 +141,7 @@ const ProfileScreen = ({ navigation }) => {
                     justifyContent: "center",
                 }}
             >
-                <Text style={{ fontSize: 40, fontWeight: "bold", color: "white" }}>
+                <Text style={{ fontSize: 30, fontWeight: "bold", color: "white" }}>
                     {initial.first + initial.second}
                 </Text>
             </View>
@@ -184,26 +161,23 @@ const ProfileScreen = ({ navigation }) => {
       await AsyncStorage.clear();
       setIsOnboardingCompleteFalse(); // back to onboarding screen
     } catch (e) {
-      // console.log("In clearAllAsyncStorage: error :", e);
+      console.log("In clearAllAsyncStorage: error :", e);
       Alert.alert(
         "Logout failed",
         "Your profile has not been deleted. Please try again"
       );
     }
-    // console.log("Async Storage Clear Done.");
   };
 
   const clearSQLiteDB = () => {
     try {
       deleteMenuItemsFromDB();
     } catch (e) {
-      // console.log("In clearSQLiteDB: error :", e);
+      console.log("In clearSQLiteDB: error :", e);
     }
   };
 
   const pickImage = async () => {
-    // No permissions request is necessary for launching the image library
-    // console.log("In ProfileScreen: pickImage");
     try {
       let result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.All,
@@ -211,9 +185,7 @@ const ProfileScreen = ({ navigation }) => {
         aspect: [4, 3],
         quality: 1,
       });
-      // console.log("Result imagePicker: ", result);
       if (!result.canceled) {
-        // console.log("Result imagePicker not canceled, userData: ", userData);
         return result.assets[0].uri;
       } else {
         return null;
@@ -242,9 +214,9 @@ const ProfileScreen = ({ navigation }) => {
           <Image
             style={styles.avatarImage}
             source={{ uri: userData.avatarImage }}
-            resizeMode="contain"
+            resizeMode="cover"
             accessible={true}
-            accessibilityLabel={"Avatar"}
+            accessibilityLabel={"Avatar image"}
           />
         </Pressable>
       );
@@ -282,9 +254,7 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   useEffect(() => {
-    console.log("In ProfileScreen: useEffect []");
     getUserDataWrapper();
-    // loadFontWrapper();
   }, []);
 
   useEffect(() => {
@@ -312,7 +282,6 @@ const ProfileScreen = ({ navigation }) => {
           <Avatar />
           <Pressable
             onPress={() => {
-              // console.log("Change pressed");
               updateAvatar();
             }}
             disabled={false}
@@ -322,7 +291,6 @@ const ProfileScreen = ({ navigation }) => {
           </Pressable>
           <Pressable
             onPress={() => {
-              // console.log("Remove");
               setUserData({ ...userData, avatarImage: null });
             }}
             disabled={false}
@@ -439,9 +407,8 @@ const ProfileScreen = ({ navigation }) => {
 
         <Pressable
           onPress={async () => {
-            // console.log("Logout");
-            clearAllAsyncStorage();
-            clearSQLiteDB();
+            clearAllAsyncStorage();  // delete the Userdata AsyncStorage
+            clearSQLiteDB(); // delete the menu stored in the SQLite DB
           }}
           disabled={false}
           style={styles.buttonEnabledLogout}
@@ -452,7 +419,6 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.innerContainer2}>
           <Pressable
             onPress={() => {
-              // console.log("Discard changes");
               getUserDataWrapper();
             }}
             disabled={false}
@@ -462,7 +428,6 @@ const ProfileScreen = ({ navigation }) => {
           </Pressable>
           <Pressable
             onPress={() => {
-              // console.log("Save changes");
               saveChanges();
             }}
             disabled={
