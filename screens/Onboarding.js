@@ -29,27 +29,35 @@ const OnboardingScreen = ({ navigation }) => {
     setIsOnboardingCompleteTrue,
   ] = React.useContext(GlobalStateContext);
   const [firstname, setFirstname] = useState("");
+  const [lastname, setLastname] = useState("");
   const [email, setEmail] = useState("");
 
   const onChangeEmail = (e) => {
     setEmail(e);
   };
 
-  const onChangeName = (e) => {
+  const onChangeFirstName = (e) => {
     if (firstname.length > 0 || e !== " ") {
       // skip leading spaces
       setFirstname(e);
     }
   };
 
+  const onChangeLastName = (e) => {
+    if (lastname.length > 0 || e !== " ") {
+      // skip leading spaces
+      setLastname(e);
+    }
+  };
+
   const isFormValid = () => {
-    return validateEmail(email) && firstname.trim().length > 0;
+    return validateEmail(email) && firstname.trim().length > 0 && lastname.trim().length > 0;
   };
 
   const storeUserInfo = async () => {
     let userData = {
       firstname: firstname,
-      lastname: null,
+      lastname: lastname,
       email: email,
       avatarImage: null,
       phone: null,
@@ -98,8 +106,20 @@ const OnboardingScreen = ({ navigation }) => {
               <TextInput
                 style={styles.input}
                 value={firstname}
-                onChangeText={onChangeName}
+                onChangeText={onChangeFirstName}
                 placeholder="Enter your first name"
+                placeholderTextColor={Colors.textSecondary}
+                keyboardType="default"
+              />
+            </View>
+            
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Last Name *</Text>
+              <TextInput
+                style={styles.input}
+                value={lastname}
+                onChangeText={onChangeLastName}
+                placeholder="Enter your last name"
                 placeholderTextColor={Colors.textSecondary}
                 keyboardType="default"
               />
