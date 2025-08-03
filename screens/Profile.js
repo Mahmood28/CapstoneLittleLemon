@@ -15,6 +15,7 @@ import { CheckBox } from "react-native-btr";
 import * as ImagePicker from "expo-image-picker";
 import { GlobalStateContext } from "../GlobalStateProvider";
 import { deleteMenuItemsFromDB} from "../MenuDatabase";
+import { Colors, Typography, Spacing, BorderRadius, Shadows } from "../styles/Theme";
 
 
 const validateEmail = (email) => {
@@ -72,10 +73,15 @@ const ProfileScreen = ({ navigation }) => {
     try {
       const userDataStr = await AsyncStorage.getItem("userData");
       const data = userDataStr != null ? await JSON.parse(userDataStr) : null;
-      setUserData(data);
+      if (data) {
+        setUserData(data);
+      } else {
+        console.log("No user data found in Profile screen");
+        setUserData({});
+      }
     } catch (error) {
-      setIsOnboardingCompleteFalse(); // Handle error of not stored userData - return to OnboardingScreen
-      console.log(error);
+      console.log("Error loading user data in Profile:", error);
+      setUserData({});
     }
   };
 
@@ -450,14 +456,10 @@ const ProfileScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "white",
-    borderColor: "lightgrey",
-    borderWidth: 2,
-    borderRadius: 20,
-    paddingLeft: 10,
-    paddingRight: 10,
-    paddingTop: 10,
-    paddingBottom: 10,
+    backgroundColor: Colors.background,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.lg,
   },
   innerContainer1: {
     flexDirection: "row",

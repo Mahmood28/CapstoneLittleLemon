@@ -7,11 +7,13 @@ import {
   Text,
   StyleSheet,
   FlatList,
+  StatusBar,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { SearchBar } from "react-native-elements";
 import debounce from "lodash.debounce";
 import { GlobalStateContext } from "../GlobalStateProvider";
+import { Colors, Typography, Spacing, BorderRadius, Shadows } from "../styles/Theme";
 import {
   createMenuTableInDBIfNotExisting,
   readAllMenuFromDB,
@@ -59,10 +61,17 @@ const HomeScreen = ({ navigation }) => {
     try {
       const userDataStr = await AsyncStorage.getItem("userData");
       const data = userDataStr != null ? JSON.parse(userDataStr) : null;
-      setUserData(data);
+      if (data) {
+        setUserData(data);
+      } else {
+        // Only set onboarding incomplete if we're sure there's no user data
+        // Don't do this immediately as it might cause loops
+        console.log("No user data found, but staying on home screen");
+        setUserData({});
+      }
     } catch (error) {
-      setIsOnboardingCompleteFalse(); // Handle error of not stored userData - return to OnboardingScreen
-      console.log(error);
+      console.log("Error loading user data:", error);
+      setUserData({});
     }
   };
 
@@ -143,6 +152,7 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const FilterButton = ({ text }) => {
+    const isSelected = filterSelections[categories.indexOf(text)];
     return (
       <Pressable
         onPress={() => {
@@ -152,20 +162,18 @@ const HomeScreen = ({ navigation }) => {
             )
           );
         }}
-        style={
-          filterSelections[categories.indexOf(text)]
-            ? styles.buttonFilterPressed
-            : styles.buttonFilterNOTPressed
-        }
+        style={[
+          styles.categoryButton,
+          isSelected ? styles.categoryButtonSelected : styles.categoryButtonUnselected
+        ]}
       >
         <Text
-          style={
-            filterSelections[categories.indexOf(text)]
-              ? styles.buttonTextWhite
-              : styles.buttonTextGreen
-          }
+          style={[
+            styles.categoryButtonText,
+            isSelected ? styles.categoryButtonTextSelected : styles.categoryButtonTextUnselected
+          ]}
         >
-          {text}
+          {text.charAt(0).toUpperCase() + text.slice(1)}
         </Text>
       </Pressable>
     );
@@ -217,35 +225,28 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const FlatListFilterButtonSeparator = () => {
-    return <Text> </Text>;
+    return <View style={styles.categorySeparator} />;
   };
 
   const renderItem = ({ item }) => {
     let imageUri = `https://github.com/Meta-Mobile-Developer-PC/Working-With-Data-API/blob/main/images/${item.image}?raw=true`;
     return (
       <Pressable
+        style={styles.menuItemContainer}
         onPress={() => {
-          // console.log("button pressed: ", item.id, item.name);
-          // TODO: show more info about the menu item pressed on
+          // TODO: Navigate to item details or add to cart
         }}
       >
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-evenly",
-            width: "100%",
-            marginTop: 10,
-          }}
-        >
-          <View style={{ flex: 5, marginRight: 10 }}>
-            <Text style={styles.itemTitle}>{item.name}</Text>
-            <Text style={styles.itemDescription} numberOfLines={2}>
+        <View style={styles.menuItemContent}>
+          <View style={styles.menuItemInfo}>
+            <Text style={styles.menuItemName}>{item.name}</Text>
+            <Text style={styles.menuItemDescription} numberOfLines={2}>
               {item.description}
             </Text>
-            <Text style={styles.itemPrice}>${item.price}</Text>
+            <Text style={styles.menuItemPrice}>${item.price}</Text>
           </View>
           <Image
-            style={{ flex: 2, resizeMode: "cover", marginTop: 20, marginLeft: 10 }}
+            style={styles.menuItemImage}
             source={{ uri: imageUri }}
             accessible={true}
             accessibilityLabel={item.name}
@@ -255,20 +256,8 @@ const HomeScreen = ({ navigation }) => {
     );
   };
 
-  FlatListItemSeparator = () => {
-    return (
-      <View
-        style={{
-          height: 1,
-          width: "100%",
-          alignSelf: "center",
-          backgroundColor: "lightgrey",
-          marginTop: 10,
-          marginLeft: 8,
-          marginRight: 8,
-        }}
-      />
-    );
+  const FlatListItemSeparator = () => {
+    return <View style={styles.menuItemSeparator} />;
   };
 
   const lookup = useCallback((q) => {
@@ -327,90 +316,68 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.innerContainer1}>
-        <Text style={styles.brandName}>Little Lemon</Text>
-        <View style={styles.innerContainer2}>
-          <View
-            style={{
-              flex: 4,
-              marginRight: 5,
-            }}
-          >
-            <Text style={styles.cityName}>Chicago</Text>
-            <Text style={styles.regularText}>
-              We are a family owned Mediterranean restaurant, focused on
-              traditional recipes served with a modern twist.
+      <StatusBar barStyle="light-content" backgroundColor={Colors.primary} />
+      
+      {/* Hero Section */}
+      <View style={styles.heroSection}>
+        <Text style={styles.restaurantName}>Little Lemon</Text>
+        <View style={styles.heroContent}>
+          <View style={styles.heroText}>
+            <Text style={styles.location}>Chicago</Text>
+            <Text style={styles.description}>
+              We are a family owned Mediterranean restaurant, focused on traditional recipes served with a modern twist.
             </Text>
           </View>
-          <View
-            style={{
-              flex: 3,
-              marginLeft: 0,
-              marginRight: 0,
-            }}
-          >
-            <Image
-              style={{
-                width: 140,
-                height: 140,
-                borderRadius: 20,
-                resizeMode: "cover",
-                marginRight:0,
-                paddingRight:0,
-              }}
-              source={require("../img/Heroimage.png")}
-              accessible={true}
-              accessibilityLabel={"image showing a menu of food"}
-            />
-          </View>
+          <Image
+            style={styles.heroImage}
+            source={require("../img/Heroimage.png")}
+            accessible={true}
+            accessibilityLabel="Delicious Mediterranean food"
+          />
         </View>
         <SearchBar
-          placeholder="Search"
-          placeholderTextColor="#495E57"
+          placeholder="Search menu items..."
+          placeholderTextColor={Colors.textSecondary}
           onChangeText={handleSearchChange}
           value={searchBarText}
-          containerStyle={styles.searchBarContainer}
-          inputStyle={styles.searchBarText}
-          inputContainerStyle={styles.searchBarInputContainer}
-          searchIcon={{ size: 20, color: "#495E57" }}
+          containerStyle={styles.searchContainer}
+          inputStyle={styles.searchInput}
+          inputContainerStyle={styles.searchInputContainer}
+          searchIcon={{ size: 20, color: Colors.primary }}
         />
       </View>
-      <View style={{ flexDirection: "row", alignItems: "left" }}>
-        <Text style={styles.sectionTitle}>Order for Delivery</Text>
-        <Image
-          style={{
-            width: 50,
-            height: 50,
-            resizeMode: "contain",
-            marginLeft: 20,
-          }}
-          source={require("../img/DeliveryVan.png")}
-          accessible={true}
-          accessibilityLabel={"icon showing a delivery van"}
-        />
-      </View>
-      <View style={{ height: "auto" }}>
+
+      {/* Menu Categories Section */}
+      <View style={styles.menuSection}>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Order for Delivery!</Text>
+          <Image
+            style={styles.deliveryIcon}
+            source={require("../img/DeliveryVan.png")}
+            accessible={true}
+            accessibilityLabel="Delivery service available"
+          />
+        </View>
+        
         <FlatList
-          horizontal={true}
+          horizontal
+          showsHorizontalScrollIndicator={false}
           data={filterButtons}
           renderItem={renderFilterButtonItem}
           keyExtractor={(item) => item.id}
           ItemSeparatorComponent={FlatListFilterButtonSeparator}
+          style={styles.categoryList}
         />
       </View>
-      <View
-        style={{
-          borderWidth: 0.8,
-          borderRadius: 1,
-          borderColor: "lightgrey",
-          marginTop: 20,
-        }}
-      ></View>
+
+      {/* Menu Items List */}
       <FlatList
         data={menu}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         ItemSeparatorComponent={FlatListItemSeparator}
+        style={styles.menuList}
+        showsVerticalScrollIndicator={false}
       />
     </View>
   );
@@ -419,211 +386,180 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "white",
-    paddingLeft: 10,
-    paddingRight: 10,
-    paddingTop: 0,
-    paddingBottom: 0,
+    backgroundColor: Colors.background,
   },
-  innerContainer1: {
-    paddingTop: 0,
-    paddingRight: 0,
-    paddingLeft: 8,
-    alignItems: "left",
-    backgroundColor: "#495E57",
+  
+  // Hero Section
+  heroSection: {
+    backgroundColor: Colors.hero,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.lg,
   },
-  innerContainer2: {
-    flexDirection: "row",
-    justifyContent: "space-evenly",
-    paddingTop: 0,
-    paddingLeft: 10,
-    paddingRight: 0,
-    paddingBottom: 0,
-    alignItems: "center",
+  restaurantName: {
+    fontSize: Typography.displayLarge,
+    fontWeight: Typography.bold,
+    color: Colors.secondary,
+    marginBottom: Spacing.sm,
   },
-  avatarImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    borderColor: "lightgrey",
-    borderWidth: 1,
+  heroContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
   },
-  brandName: {
-    fontSize: 40,
-    fontWeight: "bold",
-    paddingLeft: 10,
-    paddingTop: 10,
-    color: "#F4CE14",
-    textAlign: "left",
+  heroText: {
+    flex: 2,
+    paddingRight: Spacing.md,
   },
-  cityName: {
-    fontSize: 30,
-    fontWeight: "bold",
-    padding: 0,
-    marginTop: 0,
-    color: "white",
-    textAlign: "left",
+  location: {
+    fontSize: Typography.displayMedium,
+    fontWeight: Typography.semiBold,
+    color: Colors.textOnDark,
+    marginBottom: Spacing.sm,
+  },
+  description: {
+    fontSize: Typography.body,
+    color: Colors.textOnDark,
+    lineHeight: 22,
+  },
+  heroImage: {
+    flex: 1,
+    height: 150,
+    borderRadius: BorderRadius.lg,
+    resizeMode: 'cover',
+  },
+  
+  // Search
+  searchContainer: {
+    backgroundColor: 'transparent',
+    borderBottomColor: 'transparent',
+    borderTopColor: 'transparent',
+    paddingHorizontal: 0,
+  },
+  searchInputContainer: {
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.md,
+    height: 45,
+    ...Shadows.small,
+  },
+  searchInput: {
+    color: Colors.text,
+    fontSize: Typography.body,
+  },
+  
+  // Menu Section
+  menuSection: {
+    backgroundColor: Colors.background,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.lg,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    padding: 0,
-    marginTop: 10,
-    color: "black",
-    textAlign: "left",
+    fontSize: Typography.title,
+    fontWeight: Typography.bold,
+    color: Colors.text,
+    flex: 1,
   },
-  itemTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    paddingLeft: 8,
-    marginTop: 10,
-    color: "black",
-    textAlign: "left",
-  },
-  itemDescription: {
-    fontSize: 16,
-    paddingLeft: 8,
-    marginTop: 10,
-    color: "#495E57",
-    textAlign: "left",
-  },
-  itemPrice: {
-    fontSize: 16,
-    fontWeight: "bold",
-    paddingLeft: 8,
-    marginTop: 10,
-    color: "#495E57",
-    textAlign: "left",
-  },
-  regularText: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginTop: 10,
-    marginBottom: 10,
-    color: "white",
-    textAlign: "left",
-  },
-  buttonDisabled: {
-    padding: 6,
-    borderColor: "grey",
-    backgroundColor: "grey",
-    borderWidth: 2,
-    borderRadius: 6,
-    width: 80,
-  },
-  buttonFilterNOTPressed: {
-    padding: 6,
-    borderColor: "#EDEFEE",
-    backgroundColor: "#EDEFEE",
-    borderWidth: 2,
-    borderRadius: 16,
-    width: 80,
+  deliveryIcon: {
+    width: 40,
     height: 40,
+    resizeMode: 'contain',
+    marginLeft: Spacing.sm,
   },
-  buttonFilterPressed: {
-    padding: 6,
-    borderColor: "#495E57",
-    backgroundColor: "#495E57",
+  
+  // Categories
+  categoryList: {
+    marginVertical: Spacing.sm,
+  },
+  categoryButton: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.round,
     borderWidth: 2,
-    borderRadius: 16,
-    width: 80,
-    height: 40,
+    minWidth: 80,
+    alignItems: 'center',
   },
-  buttonTextGreen: {
-    color: "#495E57",
-    textAlign: "center",
-    fontSize: 16,
+  categoryButtonSelected: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
-  buttonTextWhite: {
-    color: "white",
-    textAlign: "center",
-    fontSize: 16,
+  categoryButtonUnselected: {
+    backgroundColor: Colors.surface,
+    borderColor: Colors.surface,
   },
-  inputHeadline: {
-    fontSize: 11,
-    fontWeight: "bold",
-    padding: 4,
-    marginTop: 10,
-    color: "#495E57",
-    textAlign: "left",
+  categoryButtonText: {
+    fontSize: Typography.bodySmall,
+    fontWeight: Typography.semiBold,
   },
-  inputBox: {
-    marginRight: 10,
-    marginVertical: 2,
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 6,
-    paddingLeft: 10,
-    fontSize: 15,
-    color: "#495E57",
-    textAlign: "left",
-    borderColor: "#495E57",
-    backgroundColor: "white",
-    width: 280,
+  categoryButtonTextSelected: {
+    color: Colors.textOnDark,
   },
-  checkboxRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 10,
+  categoryButtonTextUnselected: {
+    color: Colors.primary,
   },
-  checkboxLabel: {
-    fontSize: 15,
-    color: "#495E57",
-    textAlign: "left",
-    paddingLeft: 15,
+  categorySeparator: {
+    width: Spacing.sm,
   },
-  buttonEnabledLogout: {
-    padding: 6,
-    borderColor: "#F4CE14",
-    backgroundColor: "#F4CE14",
-    borderWidth: 2,
-    borderRadius: 9,
-    width: "100%",
-    alignSelf: "center",
-    marginTop: 20,
+  
+  // Menu Items
+  menuList: {
+    flex: 1,
+    paddingHorizontal: Spacing.lg,
   },
-  buttonTextBlack: {
-    color: "black",
-    textAlign: "center",
-    fontSize: 16,
-    fontWeight: "bold",
+  menuItemContainer: {
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    marginVertical: Spacing.sm,
+    ...Shadows.small,
   },
-  headercontainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    width: "100%",
-    backgroundColor: "white",
+  menuItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  headerimage: {
-    height: 70,
-    marginStart: 10,
+  menuItemInfo: {
+    flex: 2,
+    paddingRight: Spacing.md,
   },
+  menuItemName: {
+    fontSize: Typography.title,
+    fontWeight: Typography.bold,
+    color: Colors.text,
+    marginBottom: Spacing.xs,
+  },
+  menuItemDescription: {
+    fontSize: Typography.body,
+    color: Colors.textSecondary,
+    lineHeight: 20,
+    marginBottom: Spacing.sm,
+  },
+  menuItemPrice: {
+    fontSize: Typography.body,
+    fontWeight: Typography.bold,
+    color: Colors.primary,
+  },
+  menuItemImage: {
+    flex: 1,
+    height: 80,
+    borderRadius: BorderRadius.md,
+    resizeMode: 'cover',
+  },
+  menuItemSeparator: {
+    height: 1,
+    backgroundColor: Colors.surface,
+    marginHorizontal: Spacing.md,
+  },
+  
+  // Avatar (for header)
   avatarImageSmall: {
     width: 50,
     height: 50,
-    borderRadius: 40,
-    borderColor: "lightgrey",
-    borderWidth: 1,
-  },
-  searchBarContainer: {
-    marginBottom: 10,
-    paddingLeft: 8,
-    paddingRight: 20,
-    backgroundColor: "transparent",
-    borderBottomColor: "transparent",
-    borderTopColor: "transparent",
-  },
-  searchBarInputContainer: {
-    backgroundColor: "#EDEFEE",
-    borderRadius: 10,
-    height: 35,
-  },
-  searchBarText: {
-    color: "#495E57",
-    fontSize: 16,
-
-    margin: 0,
+    borderRadius: 25,
+    borderColor: Colors.surface,
+    borderWidth: 2,
   },
 });
 

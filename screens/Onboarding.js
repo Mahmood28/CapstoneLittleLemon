@@ -7,9 +7,13 @@ import {
   Pressable,
   TextInput,
   ScrollView,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { GlobalStateContext } from "../GlobalStateProvider";
+import { Colors, Typography, Spacing, BorderRadius, Shadows } from "../styles/Theme";
 
 const validateEmail = (email) => {
   return email.match(
@@ -19,29 +23,27 @@ const validateEmail = (email) => {
 
 const OnboardingScreen = ({ navigation }) => {
   const [
-    state,
-    setIsLoadingTrue,
-    setIsLoadingFalse,
+    ,
+    ,
+    ,
     setIsOnboardingCompleteTrue,
-    setIsOnboardingCompleteFalse,
   ] = React.useContext(GlobalStateContext);
   const [firstname, setFirstname] = useState("");
   const [email, setEmail] = useState("");
-  const [validEmail, setValidEmail] = useState(false);
-  const [validName, setValidName] = useState(false);
 
   const onChangeEmail = (e) => {
     setEmail(e);
-    setValidEmail(validateEmail(email));
   };
 
   const onChangeName = (e) => {
-    if (firstname.length > 0 || e != " ") {
+    if (firstname.length > 0 || e !== " ") {
       // skip leading spaces
       setFirstname(e);
     }
-    setValidName(firstname.length > 0);
-    // console.log("Firstname: ",firstname);
+  };
+
+  const isFormValid = () => {
+    return validateEmail(email) && firstname.trim().length > 0;
   };
 
   const storeUserInfo = async () => {
@@ -71,121 +73,159 @@ const OnboardingScreen = ({ navigation }) => {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.headercontainer}>
-        <Image
-          style={styles.headerimage}
-          source={require("../img/Logo.png")}
-          resizeMode="contain"
-          accessible={true}
-          accessibilityLabel={"Little Lemon Logo"}
-        />
-      </View>
+    <KeyboardAvoidingView 
+      style={styles.container} 
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        <View style={styles.headerContainer}>
+          <Image
+            style={styles.logo}
+            source={require("../img/Logo.png")}
+            resizeMode="contain"
+            accessible={true}
+            accessibilityLabel={"Little Lemon Logo"}
+          />
+        </View>
 
-      <View style={styles.textInputContainer}>
-        <Text style={styles.regularText}>Let us get to know you</Text>
-        <Text style={{ ...styles.regularText, marginTop: 40 }}>First Name</Text>
-        <TextInput
-          style={styles.inputBox}
-          value={firstname}
-          onChangeText={onChangeName}
-          placeholder={"Enter your first name"}
-          keyboardType={"default"}
-        />
-        <Text style={styles.regularText}>Email</Text>
-        <TextInput
-          style={styles.inputBox}
-          value={email}
-          onChangeText={onChangeEmail}
-          placeholder={"Enter your email"}
-          keyboardType={"email-address"}
-        />
-      </View>
-
-      <View style={styles.footercontainer}>
-        <View style={styles.buttonContainer}>
+        <View style={styles.contentContainer}>
+          <Text style={styles.welcomeTitle}>Welcome to Little Lemon!</Text>
+          <Text style={styles.subtitle}>Let us get to know you</Text>
+          
+          <View style={styles.formContainer}>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>First Name *</Text>
+              <TextInput
+                style={styles.input}
+                value={firstname}
+                onChangeText={onChangeName}
+                placeholder="Enter your first name"
+                placeholderTextColor={Colors.textSecondary}
+                keyboardType="default"
+              />
+            </View>
+            
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Email Address *</Text>
+              <TextInput
+                style={styles.input}
+                value={email}
+                onChangeText={onChangeEmail}
+                placeholder="Enter your email address"
+                placeholderTextColor={Colors.textSecondary}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+          </View>
+          
           <Pressable
             onPress={() => storeUserInfo()}
-            disabled={!validEmail || !validName}
-            style={
-              validEmail && validName
-                ? styles.buttonEnabled
-                : styles.buttonDisabled
-            }
+            disabled={!isFormValid()}
+            style={[
+              styles.nextButton,
+              isFormValid() ? styles.nextButtonEnabled : styles.nextButtonDisabled
+            ]}
           >
-            <Text style={styles.buttonText}>Next</Text>
+            <Text style={[
+              styles.nextButtonText,
+              isFormValid() ? styles.nextButtonTextEnabled : styles.nextButtonTextDisabled
+            ]}>
+              Get Started
+            </Text>
           </Pressable>
         </View>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.background,
   },
-  headercontainer: {
-    backgroundColor: "lightgrey",
-    alignItems: "center",
+  scrollContainer: {
+    flex: 1,
   },
-  textInputContainer: {
-    backgroundColor: "grey",
-    alignItems: "center",
-    paddingVertical: 40,
+  headerContainer: {
+    backgroundColor: Colors.surface,
+    alignItems: 'center',
+    paddingVertical: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
   },
-  footercontainer: {
-    backgroundColor: "lightgrey",
+  logo: {
+    height: 80,
+    width: '100%',
+    maxWidth: 300,
   },
-  headerimage: {
-    width: 350,
-    marginVertical: 20,
+  contentContainer: {
+    flex: 1,
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.xl,
+    paddingBottom: Spacing.xxl,
+    backgroundColor: Colors.background,
   },
-  regularText: {
-    fontSize: 24,
-    padding: 8,
-    marginTop: 20,
-    color: "black",
-    textAlign: "center",
+  welcomeTitle: {
+    fontSize: Typography.displayMedium,
+    fontWeight: Typography.bold,
+    color: Colors.primary,
+    textAlign: 'center',
+    marginBottom: Spacing.sm,
   },
-  inputBox: {
-    marginLeft: 10,
-    marginRight: 10,
-    marginVertical: 2,
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 6,
-    paddingLeft: 10,
-    fontSize: 18,
-    borderColor: "black",
-    backgroundColor: "white",
-    width: 280,
+  subtitle: {
+    fontSize: Typography.title,
+    fontWeight: Typography.medium,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: Spacing.xl,
   },
-  buttonContainer: {
-    marginTop: 20,
-    marginLeft: "70%",
-    marginBottom: 20,
+  formContainer: {
+    marginBottom: Spacing.xl,
   },
-  buttonDisabled: {
-    padding: 6,
-    borderColor: "grey",
-    backgroundColor: "grey",
+  inputContainer: {
+    marginBottom: Spacing.lg,
+  },
+  label: {
+    fontSize: Typography.body,
+    fontWeight: Typography.semiBold,
+    color: Colors.textLight,
+    marginBottom: Spacing.sm,
+  },
+  input: {
     borderWidth: 2,
-    borderRadius: 6,
-    width: 80,
+    borderColor: Colors.surface,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    fontSize: Typography.body,
+    color: Colors.text,
+    backgroundColor: Colors.background,
+    ...Shadows.small,
   },
-  buttonEnabled: {
-    padding: 6,
-    borderColor: "green",
-    backgroundColor: "green",
-    borderWidth: 2,
-    borderRadius: 6,
-    width: 80,
+  nextButton: {
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    alignItems: 'center',
+    marginTop: Spacing.lg,
+    ...Shadows.medium,
   },
-  buttonText: {
-    color: "black",
-    textAlign: "center",
-    fontSize: 18,
+  nextButtonEnabled: {
+    backgroundColor: Colors.buttonPrimary,
+  },
+  nextButtonDisabled: {
+    backgroundColor: Colors.buttonDisabled,
+  },
+  nextButtonText: {
+    fontSize: Typography.body,
+    fontWeight: Typography.semiBold,
+  },
+  nextButtonTextEnabled: {
+    color: Colors.text,
+  },
+  nextButtonTextDisabled: {
+    color: Colors.textSecondary,
   },
 });
 
